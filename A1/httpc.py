@@ -1,5 +1,10 @@
+import re
+import socket
+from urllib.parse import urlparse
+
+BUFF_SIZE = 1024
 class Httpc():
-    
+
     def __init__(self):
         pass
 
@@ -33,17 +38,50 @@ class Httpc():
                 self.get_help_info("post")
         elif("help" in cmd):
             self.get_help_info("normal")
-        elif(cmd.startswith("get")):
-            self.get_request(cmd)
-        elif(cmd.startswith("post")):
-            self.post_request(cmd)
+        elif(cmd.startswith("get") or cmd.startswith("post")):
+            self.http_request(cmd)
         else:
             print("[ERROR]: Invalid Command. Type help to list commands. Press 'Ctrl+C' or Type 'quit' to terminate.")
     
-    def get_request(self, cmd):
+    def http_request(self, cmd):
+        url = (re.findall(r'(https?://\S+)', cmd))[0]
+        if("'" in url): url = url[:-1]
+        print("[DEBUG]: url ->", type(url), url)
+        url = urlparse(url)
+        print("[DEBUG]: url parse ->", url)
+        if(cmd.startswith("get")): self.get_request(url)
+
         pass
 
+    def get_request(self, url):
+        headers = ( "GET "+ url.path + " HTTP/1.0\r\n"  
+                "Host:" + url.hostname + "\r\n\r\n")
+        self.socket_server(url, headers)
+        pass
+
+    def socket_server(self, url_parsed, request):
+ 
+        client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        try:
+            client_socket.connect((url_parsed.hostname, 80))
+            print('[DEBUG]: Socket Connect Success')
+
+            client_socket.sendall(request.encode("utf-8"))
+
+            response = client_socket.recv(BUFF_SIZE)
+
+            self.print_content(response.decode("utf-8"))
+
+        finally:  
+            client_socket.close()
+    
+    def print_content(self, content):
+        lines = content.split("\r\n")
+        print("[DEBUG]: Received Response. \n")
+        for line in lines: print(line)
+
 httpc = Httpc()
+
 print("==== Welcome to HTTPC Service ==== \n  Type help to list commands.\n  Press 'Ctrl+C' or Type 'quit' to terminate.")
 # Program Start
 while True:
