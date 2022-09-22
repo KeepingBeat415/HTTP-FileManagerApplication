@@ -27,15 +27,21 @@ class Httpc():
             'Either [-d] or [-f] can be used but not both.\n')
 
     def execute(self, cmd):
-        if(("help" in cmd and "get" in cmd) or "get" in cmd):
+        if("help" in cmd and "get" in cmd):
             self.get_help_info("get")
-        elif(("help" in cmd and "post" in cmd) or "post" in cmd):
+        elif("help" in cmd and "post" in cmd):
                 self.get_help_info("post")
         elif("help" in cmd):
             self.get_help_info("normal")
+        elif(cmd.startswith("get")):
+            self.get_request(cmd)
+        elif(cmd.startswith("post")):
+            self.post_request(cmd)
         else:
             print("[ERROR]: Invalid Command. Type help to list commands. Press 'Ctrl+C' or Type 'quit' to terminate.")
-
+    
+    def get_request(self, cmd):
+        pass
 
 httpc = Httpc()
 print("==== Welcome to HTTPC Service ==== \n  Type help to list commands.\n  Press 'Ctrl+C' or Type 'quit' to terminate.")
