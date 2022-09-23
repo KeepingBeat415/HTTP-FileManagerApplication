@@ -1,5 +1,3 @@
-import re
-
 # str = "get -h key1:value1 key2:value2 'http://httpbin.org/get?course=networking&assignment=1'"
 
 # str = "location: /redirect/1"
@@ -17,7 +15,10 @@ import re
 #   post executes a HTTP POST request and prints the resonse.
 #   help prints this screen.''')
 
-str = "httpc -v 'http://httpbin.org/get?course=networking&assignment=1' -o hello.txt"
+# str = "httpc -v 'http://httpbin.org/get?course=networking&assignment=1' -o hello.txt"
 
+str = "HTTP/1.1 418 I'M A TEAPOT"
 
-print(file_name)
+status = " ".join(str.split(" ")[2:])
+print(status)
+#print(file_name)

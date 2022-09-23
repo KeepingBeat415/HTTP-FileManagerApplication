@@ -1,3 +1,4 @@
+from importlib.resources import contents
 import re
 import socket
 from urllib.parse import urlparse
@@ -71,10 +72,10 @@ class Httpc():
 
             response = client_socket.recv(BUFF_SIZE)
 
-            response_parsed = HttpResponse(response.decode("utf-8"))
+            response_parsed = HttpResponseParsed(response.decode("utf-8"))
 
             if(self.file_name): self.download_response(response_parsed)
-            #else:
+
             self.print_response(response_parsed)
 
             if(response_parsed.code in REDIRECT_CODE):
@@ -97,12 +98,13 @@ class Httpc():
     def download_response(self, response):
 
         print("[DEBUG]: Download Response Body into", self.file_name)
+
         for line in response.body: print(line)
 
         file = open(self.file_name, "w") if (os.path.exists(self.file_name)) else open(self.file_name, "a")
   
         for line in response.body: file.write(line)
-        
+
         file.close()
 
     def print_response(self, response):
@@ -111,6 +113,7 @@ class Httpc():
 
         if(self.is_verbose):
             for line in response.header: print(line)
+
         for line in response.body: print(line)
 
 
@@ -136,27 +139,28 @@ class Httpc():
             '  get executes a HTTP GET request and prints the response.\n' +
             '  post executes a HTTP POST request and prints the resonse.\n' +
             '  help prints this screen.\n')
-class HttpResponse():
+class HttpResponseParsed():
 
   def __init__(self, response):
-    self.text = response
-    self.parseText()
+    self.parseText(response)
 
-  def parseText(self):
+  def parseText(self, response):
 
-    texts = self.text.split("\r\n\r\n")
-    self.header = texts[0].split("\r\n")
-    self.body = texts[1].split("\r\n")
+    contents = response.split("\r\n\r\n")
 
-    self.code = self.header[0].split(" ")[1]
-    self.status = self.header[0].split(" ")[2]
-    print("[DEBUG]: Code ->", self.code, "Statue ->", self.status)
+    self.headers = contents[0].split("\r\n")
+    self.body = contents[1].split("\r\n")
+    self.code = self.headers[0].split(" ")[1]
+    self.status = " ".join(self.headers[0].split(" ")[2:])
     self.location = " "
+    
+    print("[DEBUG]: Code ->", self.code, "Statue ->", self.status)
+
     if(self.code in REDIRECT_CODE):
-    #   self.location = lines[1].split(" ")[1].split("//")[1][:-1]
-        for header in self.header:
+        for header in self.headers:
             if("location" in header): self.location = re.findall(r'(\S+/\S+)', header)
-    print("[DEBUG]: Redirect to ", self.location)
+
+        #print("[DEBUG]: Redirect to ", self.location)
 
 
 print("==== Welcome to HTTPC Service ==== \n  Type help to list commands.\n  Press 'Ctrl+C' or Type 'quit' to terminate.")

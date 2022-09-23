@@ -1,13 +1,10 @@
-{
-  "args": {
-    "assignment": "1", 
-    "course": "networking"
-  }, 
-  "headers": {
-    "Host": "a0207c42-pmhttpbin-pmhttpb-c018-592832243.us-east-1.elb.amazonaws.com", 
-    "User-Agent": "Concordia-HTTP/1.0", 
-    "X-Amzn-Trace-Id": "Root=1-632db6ae-1d61541a6d69f53371e3b603"
-  }, 
-  "origin": "135.0.247.84", 
-  "url": "http://a0207c42-pmhttpbin-pmhttpb-c018-592832243.us-east-1.elb.amazonaws.com/get?course=networking&assignment=1"
-}
+
+    -=[ teapot ]=-
+
+       _...._
+     .'  _ _ `.
+    | ."` ^ `". _,
+    \_;`"---"`|//
+      |       ;/
+      \_     _/
+        `"""`
