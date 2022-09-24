@@ -1,20 +1,21 @@
-from importlib.resources import contents
 import re
+import sys
 import socket
 from urllib.parse import urlparse
 import os.path
 
-PORT = "80"
+PORT = 80
 BUFF_SIZE = 1024
-# 300 Multiple Choices 301 Moved Permanently 302 Found 303 See Other
-REDIRECT_CODE = ["300", "301", "303"]
+REDIRECT_CODE = ["301", "303"] # 300 Multiple Choices 301 Moved Permanently 302 Found 303 See Other
 
 class Httpc():
 
     def __init__(self):
         self.is_verbose = False
-        self.passed_headers = "User-Agent: Concordia-HTTP/1.0\r\n"
+        self.is_download = False
+        self.passed_headers = ""
         self.file_name = ""
+        self.body = ""
         pass
 
 
@@ -25,47 +26,69 @@ class Httpc():
             self.get_help_info("post")
         elif("help" in cmd):
             self.get_help_info("none")
+        # elif("https://" not in cmd or "http://" not in cmd):
+        #     print("[ERROR]: Invalid URL Path. Type help to list commands. Press 'Ctrl+C' or Type 'quit' to terminate.")
+        elif("-d" in cmd and "-f" in cmd):
+            print("[ERROR]: Invalid Command. POST should have either -d or -f but not both.")
         elif(cmd.startswith("get") or cmd.startswith("post")):
             self.http_request(cmd)
         else:
             print("[ERROR]: Invalid Command. Type help to list commands. Press 'Ctrl+C' or Type 'quit' to terminate.")
     
+
     def http_request(self, cmd):
 
-        self.is_verbose = True if ("-v" in cmd) else False
+        if ("-v" in cmd): self.is_verbose = True
 
-        if ("-h" in cmd): self.passed_headers +=  self.get_passed_headers_value(cmd) 
-        if ("-o" in cmd): self.file_name = (re.findall(r'(\S+$)', cmd))[0]
+        if ("-o" in cmd): 
+            self.file_name = (re.findall(r'-o (\S.+?\S+)', cmd))[0]
+            self.is_download = True
+        if ("-f" in cmd): self.file_name = (re.findall(r'-f (\S.+?\S+)', cmd))[0]
+
+        if ("-h" in cmd): self.passed_headers =  self.get_passed_headers_value(cmd)
+        if ("-d" in cmd or "-f" in cmd): self.body = self.get_passed_body_value(cmd)
 
         url = (re.findall(r'(https?://\S+)', cmd))[0]
         if("'" in url): url = url[:-1]
 
-        print("[DEBUG]: url ->", type(url), url)
-
-        url = urlparse(url)
-        print("[DEBUG]: url parse ->", url)
-
-        if(cmd.startswith("get")): self.get_request(url)
+        if(cmd.startswith("get")): self.get_request(urlparse(url))
+        if(cmd.startswith("post")): self.post_request(urlparse(url))
 
 
     def get_request(self, url):
 
-        path_with_param = url.path
-        if(url.query): path_with_param += '?' + url.query
+        path_with_query = url.path
+        if(url.query): path_with_query += '?' + url.query
 
         header = ( 
-            "GET "+ path_with_param + " HTTP/1.0\r\n" +
+            "GET " + path_with_query + " HTTP/1.0\r\n" +
+            "Host:" + url.hostname + "\r\n" +
+            "User-Agent: Concordia-HTTP/1.0\r\n" +
             self.passed_headers + "\r\n" +
-            "Host:" + url.hostname + "\r\n\r\n")
-        self.socket_server(url, header)
+            "\r\n")
+        self.server_socket(url, header)
 
-    def socket_server(self, url_parsed, request):
+
+    def post_request(self, url):
+        header = (
+            "POST " + url.path + " HTTP/1.0\r\n" +
+            "Host: " + url.hostname + "\r\n" +
+            "User-Agent: Concordia-HTTP/1.0\r\n" +
+            self.passed_headers + "\r\n" +
+            "Content-Length: " + str(len(self.body)) + "\r\n" +
+            "\r\n"
+        )
+        self.server_socket(url, header + self.body)
+
+
+    def server_socket(self, url_parsed, request):
  
         client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+
         try:
             print("[DEBUG]:", url_parsed)
 
-            client_socket.connect((url_parsed.hostname, 80))
+            client_socket.connect((url_parsed.hostname, PORT))
             print('[DEBUG]: Socket Connect Success')
 
             client_socket.sendall(request.encode("utf-8"))
@@ -74,7 +97,7 @@ class Httpc():
 
             response_parsed = HttpResponseParsed(response.decode("utf-8"))
 
-            if(self.file_name): self.download_response(response_parsed)
+            if(self.is_download): self.download_response(response_parsed)
 
             self.print_response(response_parsed)
 
@@ -82,18 +105,35 @@ class Httpc():
 
                 print("[DEBUG]: GET Redirect To", response_parsed.location)
                 
-                url = "http://httpbin.org" + response_parsed.location[0]
+                url = url_parsed.scheme + "://" + url_parsed.hostname + response_parsed.location[0]
                 self.get_request(urlparse(url))
 
         finally:  
             client_socket.close()
 
+
     def get_passed_headers_value(self, cmd):
-        values = re.findall(r'(\S+:\S+)', cmd)
-        for value in values:
-            if("https://" in value or "http://" in value): values.remove(value)
-        print("[DEBUG]: Get Headers Value =>", "\r\n".join(values))
-        return "\r\n".join(values)
+
+        headers = re.findall(r'-h (\S+:\S+)', cmd)
+        print("[DEBUG]: Get Headers Value =>", "\r\n".join(headers))
+        return "\r\n".join(headers)
+
+
+    def get_passed_body_value(self, cmd):
+        bodies = ""
+        if ("-d" in cmd):
+            bodies = re.findall(r'\'(.+?)\'', cmd)[0]
+            print("[DEBUG]: POST Body Value from inline =>", bodies)
+        if ("-f" in cmd):
+            if (os.path.exists(self.file_name)):
+                with open(self.file_name) as file:
+                    bodies = file.read().replace('\n', '')
+                    print("[DEBUG]: POST Body Value from file =>", bodies)
+            else:
+                print("[DEBUG]: The File NOT Exited.")
+                sys.exit()
+        return bodies
+
 
     def download_response(self, response):
 
@@ -107,12 +147,13 @@ class Httpc():
 
         file.close()
 
+
     def print_response(self, response):
 
         print("[DEBUG]: Received Response. \n")
 
         if(self.is_verbose):
-            for line in response.header: print(line)
+            for line in response.headers: print(line)
 
         for line in response.body: print(line)
 
@@ -139,6 +180,7 @@ class Httpc():
             '  get executes a HTTP GET request and prints the response.\n' +
             '  post executes a HTTP POST request and prints the resonse.\n' +
             '  help prints this screen.\n')
+
 class HttpResponseParsed():
 
   def __init__(self, response):
@@ -154,12 +196,11 @@ class HttpResponseParsed():
     self.status = " ".join(self.headers[0].split(" ")[2:])
     self.location = " "
     
-    print("[DEBUG]: Code ->", self.code, "Statue ->", self.status)
+    print("[DEBUG]: Response Code ->", self.code, " Response Statue ->", self.status)
 
     if(self.code in REDIRECT_CODE):
         for header in self.headers:
             if("location" in header): self.location = re.findall(r'(\S+/\S+)', header)
-
         #print("[DEBUG]: Redirect to ", self.location)
 
 
@@ -168,6 +209,5 @@ print("==== Welcome to HTTPC Service ==== \n  Type help to list commands.\n  Pre
 while True:
     cmd = input("\n")
     if("quit" in cmd): break
-    #print("[DEBUG]:",cmd)
     httpc = Httpc()
     httpc.execute_curl(cmd)
