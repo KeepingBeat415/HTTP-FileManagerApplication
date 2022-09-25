@@ -50,7 +50,8 @@ class Httpc():
 
         url = (re.findall(r'(https?://.+?\S+)', cmd))[0] if ("post" in cmd) else (re.findall(r'\'(https?://.*)\'', cmd))[0]
 
-        print("[DEBUG]: URL ->", url)
+        # print("[DEBUG]: URL -> ", url)
+        # print("[DEBUG]: Parsed URL -> ", urlparse(url))
 
         if(cmd.startswith("httpc get")): self.get_request(urlparse(url))
         if(cmd.startswith("httpc post")): self.post_request(urlparse(url))
@@ -87,10 +88,9 @@ class Httpc():
         client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
         try:
-            print("[DEBUG]:", url_parsed)
 
             client_socket.connect((url_parsed.hostname, PORT))
-            print('[DEBUG]: Socket Connect Success')
+            print('[DEBUG]: Socket Connect Success with Host ->', url_parsed.hostname)
 
             client_socket.sendall(request.encode("utf-8"))
 
@@ -104,9 +104,9 @@ class Httpc():
 
             if(response_parsed.code in REDIRECT_CODE):
 
-                print("[DEBUG]: GET Redirect To", response_parsed.location)
-                
                 url = url_parsed.scheme + "://" + url_parsed.hostname + response_parsed.location[0]
+                print("[DEBUG]: GET Redirect To New Location -> ", url)
+
                 self.get_request(urlparse(url))
 
         finally:  
@@ -116,7 +116,7 @@ class Httpc():
     def get_passed_headers_value(self, cmd):
 
         headers = re.findall(r'-h (\S+:\S+)', cmd)
-        print("[DEBUG]: Get Headers Value =>", "\r\n".join(headers))
+        print("[DEBUG]: Get Headers Value ->", "\r\n".join(headers))
         return "\r\n".join(headers)
 
 
@@ -124,12 +124,12 @@ class Httpc():
         bodies = ""
         if ("-d" in cmd):
             bodies = re.findall(r'\'(.+?)\'', cmd)[0]
-            print("[DEBUG]: POST Body Value from inline =>", bodies)
+            print("[DEBUG]: POST Body Value from inline ->", bodies)
         if ("-f" in cmd):
             if (os.path.exists(self.file_name)):
                 with open(self.file_name) as file:
                     bodies = file.read().replace('\n', '')
-                    print("[DEBUG]: POST Body Value from file =>", bodies)
+                    print("[DEBUG]: POST Body Value from file ->", bodies)
             else:
                 print("[DEBUG]: The File NOT Exited.")
                 sys.exit()
@@ -140,23 +140,19 @@ class Httpc():
 
         print("[DEBUG]: Download Response Body into", self.file_name)
 
-        # for line in response.body: 
-        #     print(line)
-
         file = open(self.file_name, "w") if (os.path.exists(self.file_name)) else open(self.file_name, "a")
   
-        for line in response.body: 
-            file.write(line)
+        for line in response.body: file.write(line)
+
         file.close()
 
 
     def print_response(self, response):
 
-        print("[DEBUG]: Received Response. \n")
-
         if(self.is_verbose):
+            print("[DEBUG]: === Received Response Header. === \n")
             for line in response.headers: print(line)
-
+        print("[DEBUG]: === Received Response Header. === \n")
         for line in response.body: print(line)
 
     def reset_param(self):
@@ -202,15 +198,13 @@ class HttpResponseParsed():
     self.body = contents[1].split("\r\n")
     self.code = self.headers[0].split(" ")[1]
     self.status = " ".join(self.headers[0].split(" ")[2:])
-    self.location = " "
+    self.location = ""
     
-    print("[DEBUG]: Response Code ->", self.code, " Response Statue ->", self.status)
+    print("[DEBUG]: Received Response Code -> ", self.code, " Received Response Statue -> ", self.status)
 
     if(self.code in REDIRECT_CODE):
         for header in self.headers:
             if("location" in header): self.location = re.findall(r'(\S+/\S+)', header)
-        #print("[DEBUG]: Redirect to ", self.location)
-
 
 print("==== Welcome to HTTPC Service ====")
 
