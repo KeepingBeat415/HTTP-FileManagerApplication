@@ -1,7 +1,7 @@
 import re
 import sys
 import os.path
-str = "get -h key1:value1 -h key2:value2 'http://httpbin.org/get?course=networking&assignment=1'"
+cmd = "get -h key1:value1 -h key2:value2 'http://httpbin.org/get?course=networking&assignment=1'"
 
 # str = "location: /redirect/1"
 
@@ -37,7 +37,29 @@ str = "get -h key1:value1 -h key2:value2 'http://httpbin.org/get?course=networki
 #     if("https://" in value or "http://" in value or ""): values.remove(value)
 # print("[DEBUG]: Get Headers Value =>", "\r\n".join(values))
 
-with open(os.path.join(sys.path[0], "POST.json"), 'r') as file:
-    bodies = file.read().replace('\n', '')
-    print("[DEBUG]: POST Body Value from file =>", bodies)
-    file.close()
+# with open(os.path.join(sys.path[0], "POST.json"), 'r') as file:
+#     bodies = file.read().replace('\n', '')
+#     print("[DEBUG]: POST Body Value from file =>", bodies)
+#     file.close()
+
+
+## HTTP POST
+
+# - httpc post -v -h Content-Type:application/json -h Accept:application/json http://httpbin.org/post
+# - httpc post -h Content-Type:application/json -d '{"Course": "COMP445","Assignment": 1}' http://httpbin.org/post
+# - httpc post -h Content-Type:application/json -f POST.json http://httpbin.org/post
+# - httpc post -v -h Content-Type:application/json -d '{"Course": "COMP445","Assignment": 1}' -f POST.json http://httpbin.org/post
+# - httpc post -v http://httpbin.org/status/301
+# - httpc post -v -h Content-Type:application/json -d '{"Course": "COMP445","Assignment": 1}' http://httpbin.org/post -o hello_POST.txt
+
+cmd = "httpc get 'http://httpbin.org/get?course=networking&assignment=1'"
+# - httpc get -v 'http://httpbin.org/get?course=networking&assignment=1'
+# - httpc get -h key:value 'http://httpbin.org/get?course=networking&assignment=1'
+# - httpc get -h key1:value1 -h key2:value2 'http://httpbin.org/get?course=networking&assignment=1'
+# - httpc get -v 'http://httpbin.org/status/301'
+# - httpc get 'http://httpbin.org/status/418' -o teapot_GET.txt
+# - httpc get 'http://httpbin.org/get?course=networking&assignment=1' -o hello_GET.txt
+
+url = (re.findall(r'(https?://.*$)', cmd))[0] if ("post" in cmd) else (re.findall(r'\'(https?://.*)\'', cmd))[0]
+
+print(url)

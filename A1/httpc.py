@@ -16,7 +16,6 @@ class Httpc():
         self.passed_headers = ""
         self.file_name = ""
         self.body = ""
-        pass
 
 
     def execute_curl(self, cmd):
@@ -26,14 +25,15 @@ class Httpc():
             self.get_help_info("post")
         elif("help" in cmd):
             self.get_help_info("none")
-        # elif("https://" not in cmd or "http://" not in cmd):
-        #     print("[ERROR]: Invalid URL Path. Type help to list commands. Press 'Ctrl+C' or Type 'quit' to terminate.")
+        elif("https://" not in cmd and "http://" not in cmd):
+            print("[ERROR]: Invalid URL Path.")
         elif("-d" in cmd and "-f" in cmd):
-            print("[ERROR]: Invalid Command. POST should have either -d or -f but not both.")
-        elif(cmd.startswith("get") or cmd.startswith("post")):
+            print("[ERROR]: Invalid Command, POST should have either -d or -f but not both.")
+        elif(cmd.startswith("httpc get") or cmd.startswith("httpc post")):
+            self.reset_param()
             self.http_request(cmd)
         else:
-            print("[ERROR]: Invalid Command. Type help to list commands. Press 'Ctrl+C' or Type 'quit' to terminate.")
+            print("[ERROR]: Invalid Command.")
     
 
     def http_request(self, cmd):
@@ -48,11 +48,13 @@ class Httpc():
         if ("-h" in cmd): self.passed_headers =  self.get_passed_headers_value(cmd)
         if ("-d" in cmd or "-f" in cmd): self.body = self.get_passed_body_value(cmd)
 
-        url = (re.findall(r'(https?://\S+)', cmd))[0]
-        if("'" in url): url = url[:-1]
+        url = (re.findall(r'(https?://.*$)', cmd))[0] if ("post" in cmd) else (re.findall(r'\'(https?://.*)\'', cmd))[0]
+        # if("'" in url): url = url[:-1]
 
-        if(cmd.startswith("get")): self.get_request(urlparse(url))
-        if(cmd.startswith("post")): self.post_request(urlparse(url))
+        print("[DEBUG]: URL ->", url)
+
+        if(cmd.startswith("httpc get")): self.get_request(urlparse(url))
+        if(cmd.startswith("httpc post")): self.post_request(urlparse(url))
 
 
     def get_request(self, url):
@@ -139,12 +141,13 @@ class Httpc():
 
         print("[DEBUG]: Download Response Body into", self.file_name)
 
-        for line in response.body: print(line)
+        # for line in response.body: 
+        #     print(line)
 
         file = open(self.file_name, "w") if (os.path.exists(self.file_name)) else open(self.file_name, "a")
   
-        for line in response.body: file.write(line)
-
+        for line in response.body: 
+            file.write(line)
         file.close()
 
 
@@ -157,6 +160,12 @@ class Httpc():
 
         for line in response.body: print(line)
 
+    def reset_param(self):
+        self.is_verbose = False
+        self.is_download = False
+        self.passed_headers = ""
+        self.file_name = ""
+        self.body = ""
 
     def get_help_info(self, arg):
         if(arg == "post"):
@@ -204,10 +213,12 @@ class HttpResponseParsed():
         #print("[DEBUG]: Redirect to ", self.location)
 
 
-print("==== Welcome to HTTPC Service ==== \n  Type help to list commands.\n  Press 'Ctrl+C' or Type 'quit' to terminate.")
+print("==== Welcome to HTTPC Service ====")
+
+# Initial HTTP 
+httpc = Httpc()
 # Program Start
-while True:
-    cmd = input("\n")
+while True: 
+    cmd = input("\n  Enter commands line begin with \"httpc\". \n  Type help to list commands.\n  Press 'Ctrl+C' or Type 'quit' to terminate.\n\n")
     if("quit" in cmd): break
-    httpc = Httpc()
     httpc.execute_curl(cmd)
