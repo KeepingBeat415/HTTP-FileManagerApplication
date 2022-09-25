@@ -48,8 +48,7 @@ class Httpc():
         if ("-h" in cmd): self.passed_headers =  self.get_passed_headers_value(cmd)
         if ("-d" in cmd or "-f" in cmd): self.body = self.get_passed_body_value(cmd)
 
-        url = (re.findall(r'(https?://.*$)', cmd))[0] if ("post" in cmd) else (re.findall(r'\'(https?://.*)\'', cmd))[0]
-        # if("'" in url): url = url[:-1]
+        url = (re.findall(r'(https?://.+?\S+)', cmd))[0] if ("post" in cmd) else (re.findall(r'\'(https?://.*)\'', cmd))[0]
 
         print("[DEBUG]: URL ->", url)
 
