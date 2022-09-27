@@ -25,8 +25,8 @@ class Httpc():
             self.get_help_info("post")
         elif("help" in cmd):
             self.get_help_info("none")
-        elif("https://" not in cmd and "http://" not in cmd):
-            print("[ERROR]: Invalid URL Path.")
+        # elif("https://" not in cmd and "http://" not in cmd):
+        #     print("[ERROR]: Invalid URL Path.")
         elif("-d" in cmd and "-f" in cmd):
             print("[ERROR]: Invalid Command, POST should have either -d or -f but not both.")
         elif(cmd.startswith("httpc get") or cmd.startswith("httpc post")):
@@ -41,17 +41,26 @@ class Httpc():
         if ("-v" in cmd): self.is_verbose = True
 
         if ("-o" in cmd): 
-            self.file_name = (re.findall(r'-o (\S.+?\S+)', cmd))[0]
-            self.is_download = True
-        if ("-f" in cmd): self.file_name = (re.findall(r'-f (\S.+?\S+)', cmd))[0]
+            if(re.search(r'-o (\S.+?\S+)', cmd)):
+                self.file_name = (re.findall(r'-o (\S.+?\S+)', cmd))[0]
+                self.is_download = True
+            else:
+                self.handle_exception("The download file name NOT exist.")
+        if ("-f" in cmd): 
+            if(re.search(r'-f (\S.+?\S+)', cmd)):
+                self.file_name = (re.findall(r'-f (\S.+?\S+)', cmd))[0]
+            else:
+                self.handle_exception("The file name NOT exist")
 
         if ("-h" in cmd): self.passed_headers =  self.get_passed_headers_value(cmd)
         if ("-d" in cmd or "-f" in cmd): self.body = self.get_passed_body_value(cmd)
 
-        url = (re.findall(r'(https?://.+?\S+)', cmd))[0] if ("post" in cmd) else (re.findall(r'\'(https?://.*)\'', cmd))[0]
-
+        if(re.search(r'(https?://.+?\S+)', cmd)):
+            url = (re.findall(r'(https?://.+?\S+)', cmd))[0] if ("post" in cmd) else (re.findall(r'\'(https?://.*)\'', cmd))[0]
+        else:
+            self.handle_exception("The URL is Invalid.")
         # print("[DEBUG]: URL -> ", url)
-        # print("[DEBUG]: Parsed URL -> ", urlparse(url))
+        print("[DEBUG]: Parsed URL -> ", urlparse(url))
 
         if(cmd.startswith("httpc get")): self.get_request(urlparse(url))
         if(cmd.startswith("httpc post")): self.post_request(urlparse(url))
@@ -68,7 +77,7 @@ class Httpc():
             "User-Agent: Concordia-HTTP/1.0\r\n" +
             self.passed_headers + "\r\n" +
             "\r\n")
-        self.server_socket(url, header)
+        self.socket_service(url, header)
 
 
     def post_request(self, url):
@@ -80,10 +89,10 @@ class Httpc():
             "Content-Length: " + str(len(self.body)) + "\r\n" +
             "\r\n"
         )
-        self.server_socket(url, header + self.body)
+        self.socket_service(url, header + self.body)
 
 
-    def server_socket(self, url_parsed, request):
+    def socket_service(self, url_parsed, request):
  
         client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
@@ -115,7 +124,11 @@ class Httpc():
 
     def get_passed_headers_value(self, cmd):
 
-        headers = re.findall(r'-h (\S+:\S+)', cmd)
+        if(re.search(r'-h (\S+:\S+)', cmd)):
+            headers = re.findall(r'-h (\S+:\S+)', cmd)
+        else:
+            self.handle_exception("The GET headers is Invalid.")
+
         print("[DEBUG]: Get Headers Value ->", "\r\n".join(headers))
         return "\r\n".join(headers)
 
@@ -123,7 +136,7 @@ class Httpc():
     def get_passed_body_value(self, cmd):
         bodies = ""
         if ("-d" in cmd):
-            bodies = re.findall(r'\'(.+?)\'', cmd)[0]
+            bodies = re.findall(r'\'(.+?)\'', cmd)[0] if (re.search(r'\'(.+?)\'', cmd))  else self.handle_exception("The POST bodies is Invalid.")
             print("[DEBUG]: POST Body Value from inline ->", bodies)
         if ("-f" in cmd):
             if (os.path.exists(self.file_name)):
@@ -131,8 +144,7 @@ class Httpc():
                     bodies = file.read().replace('\n', '')
                     print("[DEBUG]: POST Body Value from file ->", bodies)
             else:
-                print("[DEBUG]: The File NOT Exited.")
-                sys.exit()
+                self.handle_exception("The File NOT Exited.")
         return bodies
 
 
@@ -146,13 +158,19 @@ class Httpc():
 
         file.close()
 
+    def handle_exception(self, msg):
+
+        print("\n[ERROR]: ", msg)
+        cmd = input("\n  Enter commands line begin with \"httpc\". \n  Type help to list commands.\n  Press 'Ctrl+C' or Type 'quit' to terminate.\n\n")
+        if("quit" in cmd): sys.exit()
+        self.execute_curl(cmd)
 
     def print_response(self, response):
 
         if(self.is_verbose):
             print("[DEBUG]: === Received Response Header. === \n")
             for line in response.headers: print(line)
-        print("[DEBUG]: === Received Response Header. === \n")
+        print("[DEBUG]: === Received Response Body. === \n")
         for line in response.body: print(line)
 
     def reset_param(self):
@@ -191,6 +209,8 @@ class HttpResponseParsed():
     self.parseText(response)
 
   def parseText(self, response):
+    
+    # print("[DEBUG]: Received Raw Data -> ", response)
 
     contents = response.split("\r\n\r\n")
 
