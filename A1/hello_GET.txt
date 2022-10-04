@@ -1,10 +1,13 @@
-
-    -=[ teapot ]=-
-
-       _...._
-     .'  _ _ `.
-    | ."` ^ `". _,
-    \_;`"---"`|//
-      |       ;/
-      \_     _/
-        `"""`
+{
+  "args": {
+    "assignment": "1", 
+    "course": "networking"
+  }, 
+  "headers": {
+    "Host": "httpbin.org", 
+    "User-Agent": "Concordia-HTTP/1.0", 
+    "X-Amzn-Trace-Id": "Root=1-633c277f-191c3f201e7e1c5a0c8581e0"
+  }, 
+  "origin": "135.0.247.84", 
+  "url": "http://httpbin.org/get?course=networking&assignment=1"
+}

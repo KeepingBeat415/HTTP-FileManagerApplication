@@ -52,14 +52,17 @@ cmd = "get -h key1:value1 -h key2:value2 'http://httpbin.org/get?course=networki
 # - httpc post -v http://httpbin.org/status/301
 # - httpc post -v -h Content-Type:application/json -d '{"Course": "COMP445","Assignment": 1}' http://httpbin.org/post -o hello_POST.txt
 
-cmd = "httpc get 'http://httpbin.org/get?course=networking&assignment=1'"
-# - httpc get -v 'http://httpbin.org/get?course=networking&assignment=1'
-# - httpc get -h key:value 'http://httpbin.org/get?course=networking&assignment=1'
-# - httpc get -h key1:value1 -h key2:value2 'http://httpbin.org/get?course=networking&assignment=1'
-# - httpc get -v 'http://httpbin.org/status/301'
-# - httpc get 'http://httpbin.org/status/418' -o teapot_GET.txt
-# - httpc get 'http://httpbin.org/get?course=networking&assignment=1' -o hello_GET.txt
+# cmd = "httpc get 'http://httpbin.org/get?course=networking&assignment=1'"
+# # - httpc get -v 'http://httpbin.org/get?course=networking&assignment=1'
+# # - httpc get -h key:value 'http://httpbin.org/get?course=networking&assignment=1'
+# # - httpc get -h key1:value1 -h key2:value2 'http://httpbin.org/get?course=networking&assignment=1'
+# # - httpc get -v 'http://httpbin.org/status/301'
+# # - httpc get 'http://httpbin.org/status/418' -o teapot_GET.txt
+# # - httpc get 'http://httpbin.org/get?course=networking&assignment=1' -o hello_GET.txt
 
-url = (re.findall(r'(https?://.*$)', cmd))[0] if ("post" in cmd) else (re.findall(r'\'(https?://.*)\'', cmd))[0]
+# url = (re.findall(r'(https?://.*$)', cmd))[0] if ("post" in cmd) else (re.findall(r'\'(https?://.*)\'', cmd))[0]
 
-print(url)
+# print(url)
+
+str = "\n" + "="*15 + " BREAK LINE " + "="*15 + "\n"
+print(str)
