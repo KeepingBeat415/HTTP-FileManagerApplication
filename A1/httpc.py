@@ -4,9 +4,12 @@ import socket
 from urllib.parse import urlparse
 import os.path
 
-BREAK_LINE = "\n" + "="*15 + " BREAK LINE " + "="*15 + "\n"
-PORT = 80
+
+#PORT = 80 # For A1
+PORT = 8080 # For A2
+
 BUFF_SIZE = 1024
+BREAK_LINE = "\n" + "="*15 + " BREAK LINE " + "="*15 + "\n"
 REDIRECT_CODE = ["301", "303"] # 300 Multiple Choices 301 Moved Permanently 302 Found 303 See Other
 
 class Httpc():
@@ -17,6 +20,7 @@ class Httpc():
         self.passed_headers = ""
         self.file_name = ""
         self.body = ""
+
     # Execute cURL commend line
     def execute_curl(self, cmd):
         print(BREAK_LINE)
@@ -34,6 +38,7 @@ class Httpc():
             self.http_request(cmd)
         else:
             print("\n[ERROR]: Invalid Command.")
+
     # Parse HTTP Request
     def http_request(self, cmd):
         # -v enables a verbose output which display response header and body
@@ -65,6 +70,7 @@ class Httpc():
         # Format HTTP Header and Body
         if(cmd.startswith("httpc get")): self.get_request(urlparse(url))
         if(cmd.startswith("httpc post")): self.post_request(urlparse(url))
+
     # Format GET Request
     def get_request(self, url):
         path_with_query = url.path
@@ -72,11 +78,12 @@ class Httpc():
 
         header = ( 
             "GET " + path_with_query + " HTTP/1.0\r\n" +
-            "Host:" + url.hostname + "\r\n" +
+            "Host: " + url.hostname + "\r\n" +
             "User-Agent: Concordia-HTTP/1.0\r\n" +
             self.passed_headers + "\r\n" +
             "\r\n")
         self.socket_service(url, header)
+
     # Format POST Request
     def post_request(self, url):
         header = (
@@ -88,6 +95,7 @@ class Httpc():
             "\r\n"
         )
         self.socket_service(url, header + self.body)
+
     # Socket Service
     def socket_service(self, url_parsed, request):
         # Initialize Client Socket
@@ -116,6 +124,7 @@ class Httpc():
             self.handle_exception("The ERROR Exists when connect with SERER SOCKET.")
         finally:
             client_socket.close()
+
     # Get headers
     def get_passed_headers_value(self, cmd):
         # For example: -h key1:value1 -h key2:value2
@@ -125,6 +134,7 @@ class Httpc():
             self.handle_exception("The GET headers is Invalid.")
         print("[DEBUG]: Get Headers Value ->", headers)
         return "\r\n".join(headers)
+
     # POST body
     def get_passed_body_value(self, cmd):
         bodies = ""
@@ -141,6 +151,7 @@ class Httpc():
             else:
                 self.handle_exception("The File NOT Exited.")
         return bodies
+
     # Download Response into File
     def download_response(self, response):
 
@@ -169,6 +180,7 @@ class Httpc():
             for line in response.headers: print(line)
         print("\n[DEBUG]: === Received Response Body. === \n")
         for line in response.body: print(line)
+
     # Reset Parameter for each comment line
     def reset_param(self):
         self.is_verbose = False
@@ -176,6 +188,7 @@ class Httpc():
         self.passed_headers = ""
         self.file_name = ""
         self.body = ""
+        
     # Display Help Information
     def get_help_info(self, arg):
         if(arg == "post"):
