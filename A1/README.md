@@ -19,6 +19,6 @@
 - httpc post -v -h Content-Type:application/json -h Accept:application/json http://httpbin.org/post
 - httpc post -v -h Content-Type:application/json -d '{"Course": "COMP445","Assignment": 1}' http://httpbin.org/post
 - httpc post -h Content-Type:application/json -f POST.json http://httpbin.org/post
-- httpc post -v -h Content-Type:application/json -d '{"Course": "COMP445","Assignment": 1}' -f POST.json http://httpbin.org/post
+- httpc post -v -h Content-Type:application/json -d '{"Course": "COMP445","Assignment": 1}' -f hello_POST.json http://httpbin.org/post
 - httpc post -v http://httpbin.org/status/301
 - httpc post -v -h Content-Type:application/json -d '{"Course": "COMP445","Assignment": 1}' http://httpbin.org/post -o hello_POST.txt
