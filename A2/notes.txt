@@ -62,17 +62,6 @@ post -h Content-Type:application/json -d '{"File Path": "data/foo","Course": "CO
 post -h Content-Type:application/json -f bar http://localhost:8080/bar
 
 
-Test: Invalid woring directory
-post -h Content-Type:application/json -d '{"Assignment": 2}' http://localhost:8080/../bbb
-
-Test: File Not Found Error, even through in valid working directory.
-post -h Content-Type:application/json -d '{"Assignment": 2}' http://localhost:8080/data3/bbb
-
-
-Content-Disposition
-get -v -h Content-Disposition:inline 'http://localhost:8080/download'
-
-
 ==========================================================================================================================================================================================================
 
 

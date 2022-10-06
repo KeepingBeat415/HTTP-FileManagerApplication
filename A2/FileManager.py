@@ -1,9 +1,4 @@
 import os, logging, sys, json
-# application/json
-# text/html
-# text/plain
-
-
 
 class FileManager():
 
@@ -64,6 +59,8 @@ class FileManager():
                 content = file.read()
                 print(f"[DEBUG]: POST Body Value from file -> {content}") 
             self.generate_file_by_type(self.accept_type, content)
+
+    
 
     
     def html_exception_handler(self, code, status, msg):

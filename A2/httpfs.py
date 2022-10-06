@@ -84,13 +84,12 @@ class Httpfs():
                 file_manager.get_files_list()
             else:
                 file_manager.get_file_content(path)
-                # if(file_manager.status == "200"):
-                # #     self.response_body["data"] = file_manager.content
-                # # else:
-                #     self.response_body = file_manager.content
-                #     self.code = file_manager.code
             self.response_body = file_manager.content
             self.code = file_manager.code
+        
+        if(method == "POST"):
+            
+            pass
 
     def generate_response_content(self, request):
         header = (

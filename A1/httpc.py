@@ -1,8 +1,6 @@
-import re
-import sys
-import socket
+import re, sys, socket, os.path
 from urllib.parse import urlparse
-import os.path
+
 
 
 #PORT = 80 # For A1
