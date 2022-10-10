@@ -18,6 +18,7 @@ class Httpc():
         self.passed_headers = ""
         self.file_name = ""
         self.body = ""
+        self.redirect_times = 0
 
     # Execute cURL commend line
     def execute_curl(self, cmd):
@@ -115,9 +116,15 @@ class Httpc():
             # Redirect into another URL
             if(response_parsed.code in REDIRECT_CODE):
                 # Format URL, for example: https://google.ca/
-                url = url_parsed.scheme + "://" + url_parsed.hostname + response_parsed.location[0]
-                print("[DEBUG]: GET Redirect To New Location -> ", url)
-                self.get_request(urlparse(url))
+                if self.redirect_times < 6:
+                    url = url_parsed.scheme + "://" + url_parsed.hostname + response_parsed.location[0]
+                    print("[DEBUG]: GET Redirect To New Location -> ", url)
+                    self.get_request(urlparse(url))
+                    self.redirect_times += 1
+                else:
+                    self.redirect_times = 0
+                    return self.handle_exception("Redirected 5 times, no more redirect allowed.")                   
+
         except:
             self.handle_exception("The ERROR Exists when connect with SERER SOCKET.")
         finally:
