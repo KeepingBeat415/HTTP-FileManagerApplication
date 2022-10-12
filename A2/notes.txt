@@ -55,64 +55,67 @@ httpc get -v -h Accept:text/html 'http://localhost:8080/sub/../../README.txt' (B
 
 Post General Server
 
-httpc post -v -h Content-Type:application/json -h Accept:application/json '{"Course": "COMP445","Assignment": 2}' http://localhost:8080/post
+httpc post -v -h Content-Type:application/json -h Accept:application/json -d '{"Course": "COMP445","Assignment": 2}' http://localhost:8080/post
 
 Post File
-post -h Content-Type:application/json -d '{"File Path": "data/foo","Course": "COMP445","Assignment": 2}' http://localhost:8080/foo
+httpc post -h Content-Type:application/json -d '{"File Path 1": "data/foo","Course": "COMP445","Assignment": 2}' http://localhost:8080/foo
 post -h Content-Type:application/json -f bar http://localhost:8080/bar
+
+
+Test: Invalid woring directory
+post -h Content-Type:application/json -d '{"Assignment": 2}' http://localhost:8080/../bbb
+
+Test: File Not Found Error, even through in valid working directory.
+post -h Content-Type:application/json -d '{"Assignment": 2}' http://localhost:8080/data3/bbb
+
+
+Content-Disposition
+get -v -h Content-Disposition:inline 'http://localhost:8080/download'
 
 
 ==========================================================================================================================================================================================================
 
-
-httpc post -h Content-Type:text/plain teapot_GET.txt http://httpbin.org/post
+httpc post -v -h Content-Type:application/json -d '{"Course": "COMP445","Assignment": 1}' http://localhost:8080/post
 
 =============== BREAK LINE ===============
 
-[DEBUG]: Get Headers Value -> ['Content-Type:text/plain']
+[DEBUG]: Get Headers Value -> ['Content-Type:application/json']
+[DEBUG]: POST Body Value from inline -> {"Course": "COMP445","Assignment": 1}
 [DEBUG]: Socket Connect Success with Host -> httpbin.org
 [DEBUG]: Received Response Code ->  200  Received Response Statue ->  OK
+
+[DEBUG]: === Received Response Header. ===
+
+HTTP/1.1 200 OK
+Date: Thu, 06 Oct 2022 02:20:48 GMT
+Content-Type: application/json
+Content-Length: 462
+Connection: close
+Server: gunicorn/19.9.0
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true
 
 [DEBUG]: === Received Response Body. ===
 
 {
   "args": {},
-  "data": "",
+  "data": "{\"Course\": \"COMP445\",\"Assignment\": 1}",
   "files": {},
   "form": {},
   "headers": {
-    "Content-Length": "0",
-    "Content-Type": "text/plain",
+    "Content-Length": "37",
+    "Content-Type": "application/json",
     "Host": "httpbin.org",
     "User-Agent": "Concordia-HTTP/1.0",
-    "X-Amzn-Trace-Id": "Root=1-633ef206-0f07c7160ffee3a5165194e6"
+    "X-Amzn-Trace-Id": "Root=1-633e3b80-437bbdea58a5b80946736b5a"
   },
-  "json": null,
+  "json": {
+    "Assignment": 1,
+    "Course": "COMP445"
+  },
   "origin": "135.0.247.84",
   "url": "http://httpbin.org/post"
 }
-
-
- Enter commands line begin with "httpc".
-  Type help to list commands.
-  Press 'Ctrl+C' or Type 'quit' to terminate.
-
-httpc post -h Content-Type:text/plain -f teapot_GET.txt http://httpbin.org/post
-
-=============== BREAK LINE ===============
-
-[DEBUG]: Get Headers Value -> ['Content-Type:text/plain']
-[DEBUG]: POST Body Value from file ->     -=[ teapot ]=-       _...._     .'  _ _ `.    | ."` ^ `". _,    \_;`"---"`|//      |       ;/      \_     _/        `"""`
-[DEBUG]: Socket Connect Success with Host -> httpbin.org
-[DEBUG]: Received Response Code ->  200  Received Response Statue ->  OK
-
-[DEBUG]: === Received Response Body. ===
-
-
-
- Enter commands line begin with "httpc".
-  Type help to list commands.
-  Press 'Ctrl+C' or Type 'quit' to terminate.
 
 httpc post -h Content-Type:text/plain -f teapot_GET.txt http://httpbin.org/post
 
@@ -252,44 +255,3 @@ httpc post -h Content-Type:application/xml -f hello_POST.xml http://httpbin.org/
   "url": "http://httpbin.org/post"
 }
 
-httpc post -v -h Content-Type:application/json -d '{"Course": "COMP445","Assignment": 1}' http://httpbin.org/post
-
-=============== BREAK LINE ===============
-
-[DEBUG]: Get Headers Value -> ['Content-Type:application/json']
-[DEBUG]: POST Body Value from inline -> {"Course": "COMP445","Assignment": 1}
-[DEBUG]: Socket Connect Success with Host -> httpbin.org
-[DEBUG]: Received Response Code ->  200  Received Response Statue ->  OK
-
-[DEBUG]: === Received Response Header. ===
-
-HTTP/1.1 200 OK
-Date: Thu, 06 Oct 2022 02:20:48 GMT
-Content-Type: application/json
-Content-Length: 462
-Connection: close
-Server: gunicorn/19.9.0
-Access-Control-Allow-Origin: *
-Access-Control-Allow-Credentials: true
-
-[DEBUG]: === Received Response Body. ===
-
-{
-  "args": {},
-  "data": "{\"Course\": \"COMP445\",\"Assignment\": 1}",
-  "files": {},
-  "form": {},
-  "headers": {
-    "Content-Length": "37",
-    "Content-Type": "application/json",
-    "Host": "httpbin.org",
-    "User-Agent": "Concordia-HTTP/1.0",
-    "X-Amzn-Trace-Id": "Root=1-633e3b80-437bbdea58a5b80946736b5a"
-  },
-  "json": {
-    "Assignment": 1,
-    "Course": "COMP445"
-  },
-  "origin": "135.0.247.84",
-  "url": "http://httpbin.org/post"
-}

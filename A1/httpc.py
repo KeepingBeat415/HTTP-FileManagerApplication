@@ -3,8 +3,8 @@ from urllib.parse import urlparse
 
 
 
-#PORT = 80 # For A1
-PORT = 8080 # For A2
+PORT = 80 # For A1
+#PORT = 8080 # For A2
 
 BUFF_SIZE = 1024
 BREAK_LINE = "\n" + "="*15 + " BREAK LINE " + "="*15 + "\n"
@@ -149,8 +149,8 @@ class Httpc():
             print("[DEBUG]: POST Body Value from inline ->", bodies)
         if ("-f" in cmd):
             # Check whether file exist, then read content
-            if (os.path.exists(self.file_name)):
-                with open(self.file_name) as file:
+            if (os.path.exists("data/"+self.file_name)):
+                with open("data/"+self.file_name) as file:
                     bodies = file.read().replace('\n', '')
                     print("[DEBUG]: POST Body Value from file ->", bodies)
             else:
@@ -162,7 +162,7 @@ class Httpc():
 
         print("[DEBUG]: Download Response Body into", self.file_name)
         # Create new file if not exist, otherwise overwrite
-        file = open(self.file_name, "w") if (os.path.exists(self.file_name)) else open(self.file_name, "a")
+        file = open("data/"+self.file_name, "w") if (os.path.exists("data/"+self.file_name)) else open("data/"+self.file_name, "a")
 
         for line in response.body: file.write(line)
 
