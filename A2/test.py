@@ -68,10 +68,10 @@ import re, json, time, os
 
 # print(exception_handler("404","NON FOUND"))
 
-path = os.path.dirname(os.path.realpath(__file__)) + "/" + "data" + "/bar"
+# path = os.path.dirname(os.path.realpath(__file__)) + "/" + "data" + "/bar"
 
-path = "/Users/_seven/Desktop/COMP 445/COMP-445/A2/data/foo"
-print(os.path.exists(path))
+# path = "/Users/_seven/Desktop/COMP 445/COMP-445/A2/data/foo"
+# print(os.path.exists(path))
 
 # with open(path) as file:
 #         data = file.read().replace('\n', '')
@@ -84,3 +84,16 @@ print(os.path.exists(path))
 # dic_type = {"application/json":"json", "text/html":"html", "text/plain":"txt"}
 
 # print(type(dic_type.get("hello", "NONE")))
+
+
+# str = "/foo/download"
+
+# file_name = re.findall(r'/(.+?)/', str)[0]
+
+
+# print(file_name)
+
+str = "www"
+
+if(str): print("==<")
+

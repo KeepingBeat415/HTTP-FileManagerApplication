@@ -13,6 +13,7 @@ class Httpfs():
         self.dir_path = "data"
         self.verbose = False
         self.access_file_manager = False
+        self.disposition = ""
         self.code = ""
         self.status = { "200":"OK", "400":"Bad Request", "401":"Unauthorized", "404":"Not Found", "505":"HTTP Version Not Supported"}
 
@@ -40,7 +41,7 @@ class Httpfs():
 
             self.run_server()
         else:
-            print("\n[ERROR]: Invalid Command.")
+            logging.info("\n[ERROR]: Invalid Command.")
 
 
     def run_server(self):
@@ -78,7 +79,7 @@ class Httpfs():
 
             response_content = self.generate_response_content(request_pared)
 
-            logging.debug('[DEBUG]: Received HTTP Request ->', data)
+            logging.debug(f'Received HTTP Request -> {data}')
             conn.send(response_content.encode('utf-8'))
         finally:
             conn.close()
@@ -92,6 +93,8 @@ class Httpfs():
                 file_manager.get_files_list()
             else:
                 file_manager.get_file_content(path)
+            if(file_manager.disposition):
+                self.disposition = file_manager.disposition
             self.response_body = file_manager.content
             self.code = file_manager.code
         
@@ -115,7 +118,11 @@ class Httpfs():
         header = (
             request.http_version + " " + self.code + " " + self.status.get(self.code) + "\r\n" +
             "Date: " + self.get_date() + "\r\n" +
-            "Content-Type: " + request.accept_type + "\r\n" +
+            "Content-Type: " + self.process_content_type(request.accept_type) + "\r\n")
+        
+        if(self.disposition): header += self.disposition
+
+        header += (
             "Content-Length: " + str(len(self.response_body)) + "\r\n" +
             "Connection: close \r\n" +
             "\r\n"
@@ -129,6 +136,11 @@ class Httpfs():
     def get_date(self):
         return time.strftime("%a, %d %b %y %H:%M:%S", time.localtime(time.time()))
 
+    def process_content_type(self, accept_type):
+
+        dic_type = {"json":"application/json;", "xml":"application/xml;", "html":"text/html;", "plain":"text/txt"}
+        # if not exist, then set as NONE
+        return dic_type.get(accept_type)
 class HttpRequestParsed():
     def __init__(self, request):
         self.response_body = {}
@@ -143,14 +155,16 @@ class HttpRequestParsed():
         header, body = request.split("\r\n\r\n")
         headers = header.split("\r\n")
 
+        logging.debug(f"Received Header => {header}, Body => {body}")
+
         self.method, self.path, self.http_version = headers[0].split(" ")
 
-        if(re.search(r'Accept:\s*(.+?\S+)', header)):
+        if(re.search(r'Accept:(.+?\S+)', header)):
             accept_type = re.findall(r'Accept:\s*(.+?\S+)', header)[0]
             logging.debug(f"Processing request with accept type {accept_type}")
             self.accept_type = self.process_accept_type(accept_type)
 
-        logging.info("method -> ", self.method, " path -> ", self.path, " version -> ", self.http_version, " accept type ->", self.accept_type)
+        logging.debug(f"method -> {self.method}, path -> {self.path}, version -> {self.http_version}, accept type -> {self.accept_type}")
 
         if (re.search(r'/get\?(\S+)', self.path)):
             dic = {}
@@ -177,7 +191,6 @@ class HttpRequestParsed():
         dic_type = {"application/json":"json", "application/xml":"xml", "text/html":"html", "text/plain":"txt"}
         # if not exist, then set as NONE
         return dic_type.get(accept_type, "NONE")
-
 
 
 print("\n"+"="*10+"Welcome to Httpfs Server"+"="*10)

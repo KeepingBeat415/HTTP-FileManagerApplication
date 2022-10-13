@@ -62,15 +62,17 @@ httpc post -h Content-Type:application/json -d '{"File Path 1": "data/foo","Cour
 post -h Content-Type:application/json -f bar http://localhost:8080/bar
 
 
+Content-Disposition
+httpc get -v 'http://localhost:8080/foo/download'
+httpc get -v -h Accept:text/html 'http://localhost:8080/bar/download'
+
+
 Test: Invalid woring directory
 post -h Content-Type:application/json -d '{"Assignment": 2}' http://localhost:8080/../bbb
 
 Test: File Not Found Error, even through in valid working directory.
 post -h Content-Type:application/json -d '{"Assignment": 2}' http://localhost:8080/data3/bbb
 
-
-Content-Disposition
-get -v -h Content-Disposition:inline 'http://localhost:8080/download'
 
 
 ==========================================================================================================================================================================================================
@@ -254,4 +256,9 @@ httpc post -h Content-Type:application/xml -f hello_POST.xml http://httpbin.org/
   "origin": "135.0.247.84",
   "url": "http://httpbin.org/post"
 }
+
+
+
+
+
 

@@ -1,4 +1,4 @@
-import os, logging, sys, json
+import os, logging, sys, json, re
 
 class FileManager():
 
@@ -9,6 +9,7 @@ class FileManager():
         self.content = ""
         self.accept_type = accept_type
         self.status = { "200":"OK", "400":"Bad Request", "401":"Unauthorized", "404":"Not Found"}
+        self.disposition = ""
         # Set Logging info
         if(verbose):
             logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.DEBUG)
@@ -46,6 +47,13 @@ class FileManager():
 
     def get_file_content(self, path):
 
+        # Handle Content-Disposition 
+        if("/download" in path):
+            file_name = re.findall(r'/(.+?)/', path)[0]
+            logging.debug(f"File Name => {file_name}")
+            path = "/" + file_name
+            self.disposition = f"Content-Disposition: attachment; filename=\"{file_name}.{self.accept_type}\"\r\n"
+
         dir_path = self.dir_path + path
         
         if("../" in dir_path):
@@ -63,7 +71,7 @@ class FileManager():
             logging.info(f"Attempt get content from path: {dir_path}, cause 200 - \"OK\"")
             with open(dir_path) as file:
                 content = file.read()
-                print(f"[DEBUG]: POST Body Value from file -> {content}") 
+                logging.debug(f"POST Body Value from file -> {content}") 
             self.generate_file_by_type(self.accept_type, content)
 
 
@@ -87,8 +95,7 @@ class FileManager():
             with open(dir_path, "w") as file:
                 file.write(content)
             file.close()
-            print(f"[DEBUG]: POST Body Value into file -> {type(content)}") 
-        pass
+            logging.debug(f"POST Body Value into {path} -> {content}") 
 
 
     def html_exception_handler(self, code, status, msg):

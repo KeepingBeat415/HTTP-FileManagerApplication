@@ -3,8 +3,8 @@ from urllib.parse import urlparse
 
 
 
-PORT = 80 # For A1
-#PORT = 8080 # For A2
+#PORT = 80 # For A1
+PORT = 8080 # For A2
 
 BUFF_SIZE = 1024
 BREAK_LINE = "\n" + "="*15 + " BREAK LINE " + "="*15 + "\n"
