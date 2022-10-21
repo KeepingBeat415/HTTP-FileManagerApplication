@@ -7,7 +7,7 @@ import os, logging, sys, json, re, threading, time
 
 class FileManager():
     
-    THREAD = threading.Lock()
+    thread = threading.Lock()
     
     def __init__(self, verbose, dir_path, accept_type):
 
@@ -19,14 +19,14 @@ class FileManager():
         self.disposition = ""
         # Set Logging info
         logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.DEBUG)
-        self.thread = threading.Lock()
+        # self.thread = threading.Lock()
 
     def post_file_handler(self):
 
             self.code = "200"
 
-            # self.thread.acquire()
-            # print(threading.active_count())
+            self.thread.acquire()
+            print(threading.active_count())
             logging.debug(f"File Manager Writing Thread Lock with {self.dir_path}")
             count = 3
             while count:
@@ -34,7 +34,7 @@ class FileManager():
                 print ("%s %s" % (time.ctime(time.time()), count) + "\n")
                 count -= 1
 
-            # self.thread.release()
+            self.thread.release()
             logging.debug(f"File Manager Writing Thread Unlock with {self.dir_path}")
 
 
