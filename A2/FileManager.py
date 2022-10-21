@@ -70,14 +70,14 @@ class FileManager():
             self.code = "200"
             logging.info(f"Attempt get content from path: {dir_path}, cause 200 - \"OK\"")
 
-            FileManager.thread_lock.acquire()
+            self.thread_lock.acquire()
             logging.debug(f"File Manger Thread Lock is Active, with path {self.dir_path}")
 
             with open(dir_path) as file:
                 content = file.read()
                 logging.debug(f"POST Body Value from file -> {content}") 
 
-            FileManager.thread_lock.release()
+            self.thread_lock.release()
             logging.debug(f"File Manger Thread Lock is Release, with path {self.dir_path}")
 
             self.generate_file_by_type(self.accept_type, content)
@@ -101,15 +101,16 @@ class FileManager():
             self.code = "200"
             logging.info(f"Attempt post content to path: {dir_path}, cause 200 - \"OK\"")
 
-            FileManager.thread_lock.acquire()
+            self.thread_lock.acquire()
             logging.debug(f"File Manger Thread Lock is Active, with path {self.dir_path}")
 
             with open(dir_path, "w") as file:
                 file.write(content)
             file.close()
 
-            FileManager.thread_lock.release()
+            self.thread_lock.release()
             logging.debug(f"File Manger Thread Lock is Release, with path {self.dir_path}")
+            
             logging.debug(f"POST Body Value into {path} -> {content}") 
 
 
