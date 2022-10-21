@@ -1,6 +1,8 @@
-import os, logging, sys, json, re
+import os, logging, sys, json, re, threading
 
 class FileManager():
+
+    thread_lock = threading.lock()
 
     def __init__(self, verbose, dir_path, accept_type):
 
@@ -13,8 +15,6 @@ class FileManager():
         # Set Logging info
         if(verbose):
             logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.DEBUG)
-        else:
-            logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.INFO)
 
     def get_files_list(self):
         # Support HTML/XML/TXT/JSON
@@ -69,9 +69,17 @@ class FileManager():
         else:
             self.code = "200"
             logging.info(f"Attempt get content from path: {dir_path}, cause 200 - \"OK\"")
+
+            FileManager.thread_lock.acquire()
+            logging.debug(f"File Manger Thread Lock is Active, with path {self.dir_path}")
+
             with open(dir_path) as file:
                 content = file.read()
                 logging.debug(f"POST Body Value from file -> {content}") 
+
+            FileManager.thread_lock.release()
+            logging.debug(f"File Manger Thread Lock is Release, with path {self.dir_path}")
+
             self.generate_file_by_type(self.accept_type, content)
 
 
@@ -92,9 +100,16 @@ class FileManager():
         else:
             self.code = "200"
             logging.info(f"Attempt post content to path: {dir_path}, cause 200 - \"OK\"")
+
+            FileManager.thread_lock.acquire()
+            logging.debug(f"File Manger Thread Lock is Active, with path {self.dir_path}")
+
             with open(dir_path, "w") as file:
                 file.write(content)
             file.close()
+
+            FileManager.thread_lock.release()
+            logging.debug(f"File Manger Thread Lock is Release, with path {self.dir_path}")
             logging.debug(f"POST Body Value into {path} -> {content}") 
 
 

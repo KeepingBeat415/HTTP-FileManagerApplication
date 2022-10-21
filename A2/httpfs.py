@@ -61,12 +61,13 @@ class Httpfs():
         listener.bind((self.url, self.port))
         listener.listen(5)
 
-        logging.info(f'Socket is listening at {self.port}')
         try:
             while True:
                 conn, addr = listener.accept()
                 threading.Thread(target=self.http_handler, args=(conn, addr)).start()
+                logging.info(f'Socket is listening at {self.url}:{self.port}, with Thread Number: {threading.activeCount() - 1}')
         finally:
+            logging.info(f'Socket is Disconnecting with {self.url}:{self.port}...')
             listener.close()
 
 
@@ -140,14 +141,14 @@ class Httpfs():
         if (not self.access_file_manager): self.response_body = json.dumps(self.response_body, indent=2, sort_keys=True)
 
         return header + self.response_body
-        pass
+
 
     # Format time info for Logging
     def get_date(self):
         return time.strftime("%a, %d %b %y %H:%M:%S", time.localtime(time.time()))
 
-    def process_content_type(self, accept_type):
 
+    def process_content_type(self, accept_type):
         dic_type = {"json":"application/json;", "xml":"application/xml;", "html":"text/html;", "plain":"text/txt"}
         # if not exist, then set as NONE
         return dic_type.get(accept_type)
@@ -176,6 +177,7 @@ class HttpRequestParsed():
 
         logging.debug(f"method -> {self.method}, path -> {self.path}, version -> {self.http_version}, accept type -> {self.accept_type}")
 
+        # Process GET request with inline parameters, For example /get?course=networking&assignment=2
         if (re.search(r'/get\?(\S+)', self.path)):
             dic = {}
             params = re.findall(r'/get\?(\S+)', self.path)[0]
@@ -186,6 +188,7 @@ class HttpRequestParsed():
         else:
             self.access_file_manager = True
 
+        # Process HTTP request with header
         dic = {}
         for header in headers[1:]:
             key, value = header.split(":")
@@ -196,8 +199,8 @@ class HttpRequestParsed():
             self.access_file_manager = True
             self.response_body["data"] = body
 
-    def process_accept_type(self, accept_type):
 
+    def process_accept_type(self, accept_type):
         dic_type = {"application/json":"json", "application/xml":"xml", "text/html":"html", "text/plain":"txt"}
         # if not exist, then set as NONE
         return dic_type.get(accept_type, "NONE")
