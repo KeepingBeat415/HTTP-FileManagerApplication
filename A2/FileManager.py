@@ -17,14 +17,14 @@ class FileManager():
             logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.DEBUG)
 
     def get_files_list(self):
-        # Support HTML/XML/TXT/JSON
+        # Support only HTML/XML/TXT/JSON
         if (self.accept_type == "NONE"):
             self.code = "400"
             return self.html_exception_handler(self.code, self.status.get("400"), "Accept file type not supported.")
 
         files_list = []
         self.code = "200"
-
+        # Read all file name in the directory
         for (self.dir_path, dir_names, file_names) in os.walk(self.dir_path):
             files_list.extend(file_names)
 
@@ -55,21 +55,20 @@ class FileManager():
             self.disposition = f"Content-Disposition: attachment; filename=\"{file_name}.{self.accept_type}\"\r\n"
 
         dir_path = self.dir_path + path
-        
+        # Handle use ".." to access parent directory
         if("../" in dir_path):
             self.code = "401"
             logging.info(f"Attempt get content from path: {dir_path}, cause 401 - \"Unauthorized\"")
             self.html_exception_handler(self.code, self.status.get("401"), "Attempt access unauthorized file.")
-
+        # Handle file not exists
         elif(not os.path.exists(dir_path)):
             self.code = "404"
             logging.info(f"Attempt get content from path: {dir_path}, cause 404 - \"Not Found\"")
             self.html_exception_handler(self.code, self.status.get("404"), "Access file not exist.")
-
         else:
             self.code = "200"
             logging.info(f"Attempt get content from path: {dir_path}, cause 200 - \"OK\"")
-
+            
             self.thread_lock.acquire()
             logging.debug(f"File Manger Thread Lock is Active, with path {self.dir_path}")
 
@@ -86,17 +85,16 @@ class FileManager():
     def post_file_handler(self, path, content):
 
         dir_path = self.dir_path + path
-
+        # Handle use ".." to access parent directory
         if("../" in dir_path):
             self.code = "401"
             logging.info(f"Attempt post content to path: {dir_path}, cause 401 - \"Unauthorized\"")
             self.html_exception_handler(self.code, self.status.get("401"), "Attempt access unauthorized file.")
-
+        # Handle file not exists
         elif(not os.path.exists(dir_path)):
             self.code = "404"
             logging.info(f"Attempt post content to path: {dir_path}, cause 404 - \"Not Found\"")
             self.html_exception_handler(self.code, self.status.get("404"), "Access file not exist.")
-
         else:
             self.code = "200"
             logging.info(f"Attempt post content to path: {dir_path}, cause 200 - \"OK\"")
@@ -109,10 +107,7 @@ class FileManager():
             file.close()
 
             self.thread_lock.release()
-            logging.debug(f"File Manger Thread Lock is Release, with path {self.dir_path}")
-            
-            logging.debug(f"POST Body Value into {path} -> {content}") 
-
+            logging.debug(f"File Manger Thread Lock is Release, with path {self.dir_path}.\nPOST Body Value into {path} -> {content}")
 
     def html_exception_handler(self, code, status, msg):
         self.content =  (

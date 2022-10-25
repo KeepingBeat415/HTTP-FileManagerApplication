@@ -1,12 +1,9 @@
-from cmath import log
 import re, sys, json, time, socket, logging, os.path, threading, argparse
 from FileManager import FileManager
-
 
 BUFF_SIZE = 1024
 
 class Httpfs():
-
 
     def __init__(self):
         self.url = ""
@@ -19,11 +16,13 @@ class Httpfs():
         self.status = { "200":"OK", "400":"Bad Request", "401":"Unauthorized", "404":"Not Found", "505":"HTTP Version Not Supported"}
         logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.DEBUG)
 
-
+    # Parser input cmd setting
     def execute_cmd(self, cmd):
+
         if(cmd.startswith("httpfs")):
             
             try:
+                # Using ArgumentParser Library
                 cmd_parser = argparse.ArgumentParser(prog='httpfs', usage='%(prog)s [-v] [-p PORT] [-d PATH-TO-DIR]', description='Process some integers.')
 
                 cmd_parser.add_argument('-v', dest='verbose', action=argparse.BooleanOptionalAction, help='verbose', default=False)
@@ -31,10 +30,10 @@ class Httpfs():
                 cmd_parser.add_argument('-d', dest='dir_path', help='file manager directory', default='data')
 
                 args = cmd_parser.parse_args(cmd[6:].split()) # remove httpfs
-                logging.debug(f"Parser CMD As --> {args}")
+                logging.debug(f"Parser cmd As --> {args}")
 
                 self.verbose, self.port, self.dir_path = args.verbose, args.port, args.dir_path
-
+                # Display logging debug msg
                 if(self.verbose):
                     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.DEBUG)
 
@@ -46,14 +45,12 @@ class Httpfs():
                 logging.info(f"HTTP File Manager Server Setting: Port - {self.port}, Directory - {self.dir_path}, Verbose - {self.verbose}")
 
                 self.run_server()
-
             except:
                 logging.info("[ERROR]: Invalid Command, with UNKNOWN command.")
-
         else:
             logging.info("[ERROR]: Invalid Command, command should start with \"httpfs\"")
 
-
+    # Run...
     def run_server(self):
         logging.info('HTTP File Manager Server Socket is running...')
 
@@ -63,6 +60,7 @@ class Httpfs():
 
         try:
             while True:
+                # Connecting with client socket
                 conn, addr = listener.accept()
                 threading.Thread(target=self.http_handler, args=(conn, addr)).start()
                 logging.info(f'Socket is listening at {self.url}:{self.port}, with Thread Number: {threading.activeCount() - 1}')
@@ -70,21 +68,29 @@ class Httpfs():
             logging.info(f'Socket is Disconnecting with {self.url}:{self.port}...')
             listener.close()
 
-
+    # Handle receive HTTP msg
     def http_handler(self, conn, addr):
 
         try:
-            data = b''
+            data = b""
             while True:
-                temp = conn.recv(BUFF_SIZE)
-                data += temp
-                if(len(temp) < BUFF_SIZE): break;
+
+                #temp = 
+                data += conn.recv(BUFF_SIZE)
+                if(len(conn.recv(BUFF_SIZE)) < BUFF_SIZE): 
+                    #data += conn.recv(BUFF_SIZE)
+                    break
+
+                # temp = conn.recv(BUFF_SIZE)
+                # data += temp
+                # if(len(temp) < BUFF_SIZE): break;
             # Process HTTP request
             request_pared = HttpRequestParsed(data.decode('utf-8'))
             
             self.response_body = request_pared.response_body
             self.access_file_manager = request_pared.access_file_manager
 
+            # Process Get/Post with File Manager
             if(self.access_file_manager):
                 self.handle_files_request(request_pared.method, request_pared.path, request_pared.accept_type)
 
@@ -95,27 +101,32 @@ class Httpfs():
         finally:
             conn.close()
     
+    # Call File Manager
     def handle_files_request(self, method, path, accept_type):
 
         file_manager = FileManager(self.verbose, self.dir_path, accept_type)
 
         if(method == "GET"):
+            # General GET files list request as "/", and GET file content
             if(path == "/"):
                 file_manager.get_files_list()
             else:
                 file_manager.get_file_content(path)
+            # Content-Disposition
             if(file_manager.disposition):
                 self.disposition = file_manager.disposition
+
             self.response_body = file_manager.content
             self.code = file_manager.code
         
         if(method == "POST"):
+            # General POST request as "/post"
             if(path == "/post"):
                 self.code = "200"
                 self.response_body = json.dumps(self.response_body, indent=2, sort_keys=True)
             else:
                 file_manager.post_file_handler(path, self.response_body["data"])
-
+                # With 200 code as successes, and ERROR with 401, 404
                 if(file_manager.code == "200"):
                     self.response_body = json.dumps(self.response_body, indent=2, sort_keys=True)
                     self.code = file_manager.code
@@ -138,10 +149,10 @@ class Httpfs():
             "Connection: close \r\n" +
             "\r\n"
         )
+        # Response with JSON Format with general GET or POST request
         if (not self.access_file_manager): self.response_body = json.dumps(self.response_body, indent=2, sort_keys=True)
 
         return header + self.response_body
-
 
     # Format time info for Logging
     def get_date(self):
@@ -152,6 +163,7 @@ class Httpfs():
         dic_type = {"json":"application/json;", "xml":"application/xml;", "html":"text/html;", "plain":"text/txt"}
         # if not exist, then set as NONE
         return dic_type.get(accept_type)
+
 class HttpRequestParsed():
     def __init__(self, request):
         self.response_body = {}
@@ -166,10 +178,10 @@ class HttpRequestParsed():
         header, body = request.split("\r\n\r\n")
         headers = header.split("\r\n")
 
-        logging.debug(f"Received Header => {header}, Body => {body}")
+        logging.debug(f"Received Header -> {header}, Body -> {body}")
 
         self.method, self.path, self.http_version = headers[0].split(" ")
-
+        # Request with Accept type
         if(re.search(r'Accept:(.+?\S+)', header)):
             accept_type = re.findall(r'Accept:\s*(.+?\S+)', header)[0]
             logging.debug(f"Processing request with accept type {accept_type}")
@@ -199,7 +211,7 @@ class HttpRequestParsed():
             self.access_file_manager = True
             self.response_body["data"] = body
 
-
+    # Process only handle Four different type 
     def process_accept_type(self, accept_type):
         dic_type = {"application/json":"json", "application/xml":"xml", "text/html":"html", "text/plain":"txt"}
         # if not exist, then set as NONE
