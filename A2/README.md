@@ -16,10 +16,10 @@
 
 ### GET File Content
 
-- httpc get -v -h Accept:text/plain 'http://localhost:8080/teapot' (Good Case)
+- httpc get -v -h Accept:text/plain 'http://localhost:8080/bar' (Good Case)
 - httpc get -v -h Accept:text/html 'http://localhost:8080/sub/foo' (Good Case, access file in the sub-directory)
 
-- httpc get -v -h Accept:text/html 'http://localhost:8080/foo.txt' (Bad Case, file not exist)
+- httpc get -v -h Accept:application/json 'http://localhost:8080/foo.txt' (Bad Case, file not exist)
 - httpc get -v -h Accept:text/html 'http://localhost:8080/sub/../../README.txt' (Bad Case, authority issue)
 
 ### Basic HTTP POST
@@ -29,12 +29,11 @@
 ### POST File Content
 
 - httpc post -v -h Content-Type:application/json -d '{"File Path": "data/foo","Course": "COMP445","Assignment": 2}' http://localhost:8080/foo (Good Case, inline parameter post)
-- httpc post -v -h Content-Type:application/json -f bar http://localhost:8080/bar (Good Case, file content post)
+- httpc post -v -h Content-Type:text/plain -f bar http://localhost:8080/bar (Good Case, file content post)
 
 - httpc post -v -h Content-Type:application/json -d '{"File Path": "fake/foo","Course": "COMP445","Assignment": 2}' http://localhost:8080/fake/foo (Bad Case, file not exist)
 - httpc post -v -h Content-Type:application/json -f bar 'http://localhost:8080/sub/../../README.txt' (Bad Case, authority issue)
 
 ### Content-Disposition
 
-- httpc get -v 'http://localhost:8080/foo/download' (Good Case)
-- httpc get -v -h Accept:text/html 'http://localhost:8080/bar/download' (Good Case, with accept type)
+- httpc get -v -h Accept:application/json 'http://localhost:8080/foo/download' (Good Case, with accept type)

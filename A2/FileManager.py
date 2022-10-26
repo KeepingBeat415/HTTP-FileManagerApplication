@@ -1,8 +1,8 @@
-import os, logging, sys, json, re, threading
+import os, logging, sys, json, re, threading, time
 
 class FileManager():
 
-    thread_lock = threading.lock()
+    thread_lock = threading.Lock()
 
     def __init__(self, verbose, dir_path, accept_type):
 
@@ -12,7 +12,7 @@ class FileManager():
         self.accept_type = accept_type
         self.status = { "200":"OK", "400":"Bad Request", "401":"Unauthorized", "404":"Not Found"}
         self.disposition = ""
-        # Set Logging info
+        # Display logging debug msg
         if(verbose):
             logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.DEBUG)
 
@@ -55,6 +55,7 @@ class FileManager():
             self.disposition = f"Content-Disposition: attachment; filename=\"{file_name}.{self.accept_type}\"\r\n"
 
         dir_path = self.dir_path + path
+
         # Handle use ".." to access parent directory
         if("../" in dir_path):
             self.code = "401"
@@ -85,11 +86,13 @@ class FileManager():
     def post_file_handler(self, path, content):
 
         dir_path = self.dir_path + path
+
         # Handle use ".." to access parent directory
         if("../" in dir_path):
             self.code = "401"
             logging.info(f"Attempt post content to path: {dir_path}, cause 401 - \"Unauthorized\"")
             self.html_exception_handler(self.code, self.status.get("401"), "Attempt access unauthorized file.")
+
         # Handle file not exists
         elif(not os.path.exists(dir_path)):
             self.code = "404"
@@ -106,10 +109,18 @@ class FileManager():
                 file.write(content)
             file.close()
 
+            count = 5
+            while count:
+                time.sleep(2)
+                print ("%s %s" % (time.ctime(time.time()), count) + "\n")
+                count -= 1
+
             self.thread_lock.release()
             logging.debug(f"File Manger Thread Lock is Release, with path {self.dir_path}.\nPOST Body Value into {path} -> {content}")
 
     def html_exception_handler(self, code, status, msg):
+        logging.debug(f"File manager exception handler: code => {code}, status => {status}, msg => {msg}")
+
         self.content =  (
                         "<html>\n"+
                         f"  <head><title>{code} {status}</title></head>\n"+

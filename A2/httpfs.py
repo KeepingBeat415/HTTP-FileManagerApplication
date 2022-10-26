@@ -1,3 +1,4 @@
+from distutils.log import log
 import re, sys, json, time, socket, logging, os.path, threading, argparse
 from FileManager import FileManager
 
@@ -14,7 +15,7 @@ class Httpfs():
         self.disposition = ""
         self.code = ""
         self.status = { "200":"OK", "400":"Bad Request", "401":"Unauthorized", "404":"Not Found", "505":"HTTP Version Not Supported"}
-        logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.DEBUG)
+        logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.INFO)
 
     # Parser input cmd setting
     def execute_cmd(self, cmd):
@@ -39,6 +40,7 @@ class Httpfs():
 
                 # Validated the file directory 
                 is_exist_path = os.path.dirname(os.path.realpath(__file__)) + "/" + self.dir_path
+
                 if(not os.path.exists(is_exist_path)): 
                     return logging.info("File Manger Server Directory is not exist.")
 
@@ -52,6 +54,7 @@ class Httpfs():
 
     # Run...
     def run_server(self):
+
         logging.info('HTTP File Manager Server Socket is running...')
 
         listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -63,7 +66,7 @@ class Httpfs():
                 # Connecting with client socket
                 conn, addr = listener.accept()
                 threading.Thread(target=self.http_handler, args=(conn, addr)).start()
-                logging.info(f'Socket is listening at {self.url}:{self.port}, with Thread Number: {threading.activeCount() - 1}')
+                logging.info(f'Socket is listening at {self.url}:{self.port}, and Thread Number: {threading.activeCount() - 1}')
         finally:
             logging.info(f'Socket is Disconnecting with {self.url}:{self.port}...')
             listener.close()
@@ -74,16 +77,11 @@ class Httpfs():
         try:
             data = b""
             while True:
+                temp = conn.recv(BUFF_SIZE)
+                data += temp
+                if(len(temp) < BUFF_SIZE): break;
 
-                #temp = 
-                data += conn.recv(BUFF_SIZE)
-                if(len(conn.recv(BUFF_SIZE)) < BUFF_SIZE): 
-                    #data += conn.recv(BUFF_SIZE)
-                    break
-
-                # temp = conn.recv(BUFF_SIZE)
-                # data += temp
-                # if(len(temp) < BUFF_SIZE): break;
+            logging.debug(f'Received HTTP Request -> {data}')
             # Process HTTP request
             request_pared = HttpRequestParsed(data.decode('utf-8'))
             
@@ -93,10 +91,11 @@ class Httpfs():
             # Process Get/Post with File Manager
             if(self.access_file_manager):
                 self.handle_files_request(request_pared.method, request_pared.path, request_pared.accept_type)
+            else:
+                self.code = "200"
 
             response_content = self.generate_response_content(request_pared)
 
-            logging.debug(f'Received HTTP Request -> {data}')
             conn.send(response_content.encode('utf-8'))
         finally:
             conn.close()
@@ -112,6 +111,7 @@ class Httpfs():
                 file_manager.get_files_list()
             else:
                 file_manager.get_file_content(path)
+
             # Content-Disposition
             if(file_manager.disposition):
                 self.disposition = file_manager.disposition
@@ -126,22 +126,27 @@ class Httpfs():
                 self.response_body = json.dumps(self.response_body, indent=2, sort_keys=True)
             else:
                 file_manager.post_file_handler(path, self.response_body["data"])
+                self.code = file_manager.code
                 # With 200 code as successes, and ERROR with 401, 404
                 if(file_manager.code == "200"):
                     self.response_body = json.dumps(self.response_body, indent=2, sort_keys=True)
-                    self.code = file_manager.code
                 else:
                     self.response_body = file_manager.content
-                    self.code = file_manager.code
+        
+        logging.debug(f"Processed response: Code => {self.code}, Body => {self.response_body}")
 
 
     def generate_response_content(self, request):
 
         header = (
             request.http_version + " " + self.code + " " + self.status.get(self.code) + "\r\n" +
-            "Date: " + self.get_date() + "\r\n" +
-            "Content-Type: " + self.process_content_type(request.accept_type) + "\r\n")
-        
+            "Date: " + self.get_date() + "\r\n")
+        # Response with Error Msg with HTML, if != "200"
+        if(self.code != "200"):
+            header += "Content-Type: text/html\r\n"
+        else:
+            header += "Content-Type: " + self.process_content_type(request.accept_type) + "\r\n"
+
         if(self.disposition): header += self.disposition
 
         header += (
@@ -160,11 +165,12 @@ class Httpfs():
 
 
     def process_content_type(self, accept_type):
-        dic_type = {"json":"application/json;", "xml":"application/xml;", "html":"text/html;", "plain":"text/txt"}
+        dic_type = {"json":"application/json;", "xml":"application/xml;", "html":"text/html;", "txt":"text/txt"}
         # if not exist, then set as NONE
         return dic_type.get(accept_type)
 
 class HttpRequestParsed():
+
     def __init__(self, request):
         self.response_body = {}
         self.access_file_manager = False
@@ -178,7 +184,7 @@ class HttpRequestParsed():
         header, body = request.split("\r\n\r\n")
         headers = header.split("\r\n")
 
-        logging.debug(f"Received Header -> {header}, Body -> {body}")
+        logging.debug(f"Received Processing Request: Header -> {header}, Body -> {body}")
 
         self.method, self.path, self.http_version = headers[0].split(" ")
         # Request with Accept type
