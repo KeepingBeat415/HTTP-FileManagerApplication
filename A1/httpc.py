@@ -244,7 +244,7 @@ print("\n"+"="*10+"Welcome to HTTPC Service"+"="*10)
 
 # Initial HTTP 
 httpc = Httpc()
-# Program Start
+#Program Start
 while True: 
     try:
         cmd = input("\n Enter commands line begin with \"httpc\". \n  Type help to list commands.\n  Press 'Ctrl+C' or Type 'quit' to terminate.\n\n")
@@ -252,3 +252,32 @@ while True:
         httpc.execute_curl(cmd)
     except KeyboardInterrupt:
         sys.exit()
+
+
+
+# ============ AUTO DEBUG For A2 ============
+# input_cmd = [
+# "httpc get -v 'http://localhost:8080/get?course=networking&assignment=1'",
+# "httpc get -v -h key1:value1 -h key2:value2 'http://localhost:8080/get?course=networking&assignment=1'",
+
+# "httpc get -v -h Accept:application/xml 'http://localhost:8080/'",
+# "httpc get -v -h Accept:application/pdf 'http://localhost:8080/'",
+
+# "httpc get -v -h Accept:text/plain 'http://localhost:8080/bar'",
+# "httpc get -v -h Accept:text/html 'http://localhost:8080/sub/foo'",
+# "httpc get -v -h Accept:application/json 'http://localhost:8080/foo.txt'",
+# "httpc get -v -h Accept:text/html 'http://localhost:8080/sub/../../README.txt'",
+
+# "httpc post -v -h Content-Type:application/json -h Accept:application/json -d '{\"Course\": \"COMP445\",\"Assignment\": 2}' http://localhost:8080/post",
+
+# "httpc post -v -h Content-Type:application/json -d '{\"File Path\": \"data/foo\",\"Course\": \"COMP445\",\"Assignment\": 2}' http://localhost:8080/foo",
+# "httpc post -v -h Content-Type:text/plain -f bar http://localhost:8080/bar",
+
+# "httpc post -v -h Content-Type:application/json -d '{\"File Path\": \"fake/foo\",\"Course\": \"COMP445\",\"Assignment\": 2}' http://localhost:8080/fake/foo",
+# "httpc post -v -h Content-Type:application/json -f bar 'http://localhost:8080/sub/../../README.txt'",
+# "httpc get -v -h Accept:application/json 'http://localhost:8080/foo/download'"
+# ]
+
+# for cmd in input_cmd:
+#     print("\n"+cmd+"\n")
+#     httpc.execute_curl(cmd)
