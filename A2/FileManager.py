@@ -1,20 +1,95 @@
 import os, logging, sys, json, re, threading, time
+from urllib import response
 
 class FileManager():
 
     thread_lock = threading.Lock()
 
-    def __init__(self, verbose, dir_path, accept_type):
+    def __init__(self, verbose, dir_path, request):
 
-        self.dir_path = os.path.dirname(os.path.realpath(__file__)) + "/" + dir_path
-        self.code = ""
-        self.content = ""
-        self.accept_type = accept_type
-        self.status = { "200":"OK", "400":"Bad Request", "401":"Unauthorized", "404":"Not Found"}
-        self.disposition = ""
         # Display logging debug msg
         if(verbose):
             logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.DEBUG)
+        else:
+            logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.INFO)
+
+        self.dir_path = os.path.dirname(os.path.realpath(__file__)) + "/" + dir_path
+        self.status = { "200":"OK", "400":"Bad Request", "401":"Unauthorized", "404":"Not Found"}
+        
+        self.code = ""
+        self.response_content = ""
+
+        self.disposition = ""
+        self.response_dic = {}
+        self.accept_type = "json"
+ 
+        self.parse_data(request)
+
+
+    def parse_data(self, request):
+
+        header, body = request.split("\r\n\r\n")
+        headers = header.split("\r\n")
+
+        #logging.debug(f"Received Processing Request: Header -> {header}, Body -> {body}")
+
+        method, src_path, self.http_version = headers[0].split(" ")
+        # Request with Accept type
+        if(re.search(r'Accept:(.+?\S+)', header)):
+            accept_type = re.findall(r'Accept:\s*(.+?\S+)', header)[0]
+            self.accept_type = self.process_accept_type(accept_type)
+
+        logging.debug(f"method -> {method}, path -> {src_path}, version -> {self.http_version}, accept type -> {self.accept_type}")
+
+        # Process HTTP request with header
+        dic = {}
+        for header in headers[1:]:
+            key, value = header.split(":")
+            dic[key] = value
+        self.response_dic["headers"] = dic
+
+        if(method == "GET"):
+            self.handle_GET_file_request(src_path)
+
+        if(method == "POST"):
+            self.response_dic["data"] = body
+            self.handle_POST_file_request(src_path)
+    
+    def handle_GET_file_request(self, src_path):
+        # Process GET request with inline parameters, For example /get?course=networking&assignment=2
+        if (re.search(r'/get\?(\S+)', src_path)):
+            dic = {}
+            params = re.findall(r'/get\?(\S+)', src_path)[0]
+            for param in params.split("&"):
+                key, value = param.split("=")
+                dic[key] = value
+            self.response_dic["arg"] = dic
+
+            self.code = "200"
+            self.response_content = json.dumps(self.response_dic, indent=2, sort_keys=True)
+        # General GET files list request as "/", and GET file content
+        elif(src_path == "/"):
+            self.get_files_list()
+        else:
+            self.get_file_content(src_path)
+        
+        logging.debug(f"Processed GET response: Code => {self.code}, Body => {self.response_dic}")
+    
+    # Call File Manager
+    def handle_POST_file_request(self, src_path):
+
+        if(src_path == "/post"):
+            self.code = "200"
+            self.response_dic = json.dumps(self.response_dic, indent=2, sort_keys=True)
+        else:
+            self.post_file_handler(src_path, self.response_dic["data"])
+
+            # With 200 code as successes, and ERROR with 401, 404
+            if(self.code == "200"):
+                self.response_content = json.dumps(self.response_dic, indent=2, sort_keys=True)
+
+        logging.debug(f"Processed POST response: Code => {self.code}, Body => {self.response_dic}")
+    
 
     def get_files_list(self):
         # Support only HTML/XML/TXT/JSON
@@ -28,7 +103,7 @@ class FileManager():
         for (self.dir_path, dir_names, file_names) in os.walk(self.dir_path):
             files_list.extend(file_names)
 
-        content = " ".join(files_list)
+        content = " | ".join(files_list)
     
         self.generate_file_by_type(self.accept_type, content)
 
@@ -36,13 +111,19 @@ class FileManager():
     def generate_file_by_type(self, accept_type, content):
 
         if(accept_type == "json"):
-            self.content = json.dumps({"data":content}, indent=2, sort_keys=True) 
+            self.response_content = json.dumps({"data":content}, indent=2, sort_keys=True) 
         elif(accept_type == "txt"):
-            self.content = content
+            self.response_content = content
         elif(accept_type == "xml"):
             self.generate_xml_file(content)
         else:
             self.generate_html_file(content)
+
+    # Process only handle Four different type 
+    def process_accept_type(self, accept_type):
+        dic_type = {"application/json":"json", "application/xml":"xml", "text/html":"html", "text/plain":"txt"}
+        # if not exist, then set as NONE
+        return dic_type.get(accept_type, "NONE")
 
 
     def get_file_content(self, path):
@@ -76,6 +157,8 @@ class FileManager():
             with open(dir_path) as file:
                 content = file.read()
                 logging.debug(f"POST Body Value from file -> {content}") 
+            
+            #self.thread_lock_hold("GET", 5)
 
             self.thread_lock.release()
             logging.debug(f"File Manger Thread Lock is Release, with path {self.dir_path}")
@@ -109,11 +192,7 @@ class FileManager():
                 file.write(content)
             file.close()
 
-            count = 5
-            while count:
-                time.sleep(2)
-                print ("%s %s" % (time.ctime(time.time()), count) + "\n")
-                count -= 1
+            #self.thread_lock_hold("POST", 5)
 
             self.thread_lock.release()
             logging.debug(f"File Manger Thread Lock is Release, with path {self.dir_path}.\nPOST Body Value into {path} -> {content}")
@@ -121,7 +200,7 @@ class FileManager():
     def html_exception_handler(self, code, status, msg):
         logging.debug(f"File manager exception handler: code => {code}, status => {status}, msg => {msg}")
 
-        self.content =  (
+        self.response_content =  (
                         "<html>\n"+
                         f"  <head><title>{code} {status}</title></head>\n"+
                         "  <body>\n"
@@ -132,7 +211,7 @@ class FileManager():
 
 
     def generate_xml_file(self, content):
-        self.content = (
+        self.response_content = (
                 "<note>\n"+
                 "  <heading> XML File </heading>\n"+
                 f"  <body>{content}</body>\n"+
@@ -140,10 +219,17 @@ class FileManager():
 
 
     def generate_html_file(self, content):
-        self.content =  (
+        self.response_content =  (
                 "<html>\n"+
                 "  <head><title>HTML File</title></head>\n"+
                 "  <body>\n"
                 f"    <center><h1>{content}</h1></center>\n"
                 "  </body>\n"
                 "</html>\n")
+
+
+    def thread_lock_hold(self, msg, count):
+        while count:
+            time.sleep(3)
+            print(f"\n[DEBUG]: {msg} Thread Lock -- "+"%s -- Countdown: %s" % (time.ctime(time.time()), count))
+            count -= 1
