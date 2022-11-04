@@ -6,7 +6,7 @@
   "headers": {
     "Host": "httpbin.org", 
     "User-Agent": "Concordia-HTTP/1.0", 
-    "X-Amzn-Trace-Id": "Root=1-634724bd-0ac17ab461154dc20cbb54aa"
+    "X-Amzn-Trace-Id": "Root=1-63645dfb-312064df52a5d188249cb753"
   }, 
   "origin": "135.0.247.84", 
   "url": "http://httpbin.org/get?course=networking&assignment=1"

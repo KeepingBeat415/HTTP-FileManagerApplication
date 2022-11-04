@@ -1,4 +1,4 @@
-import re, sys, socket, os.path
+import re, sys, socket, os.path, time
 from urllib.parse import urlparse
 
 
@@ -19,6 +19,7 @@ class Httpc():
         self.file_name = ""
         self.body = ""
         self.redirect_times = 0
+        self.method = ""
 
     # Execute cURL commend line
     def execute_curl(self, cmd):
@@ -67,8 +68,12 @@ class Httpc():
 
         # print("[DEBUG]: Parsed URL -> ", urlparse(url))
         # Format HTTP Header and Body
-        if(cmd.startswith("httpc get")): self.get_request(urlparse(url))
-        if(cmd.startswith("httpc post")): self.post_request(urlparse(url))
+        if(cmd.startswith("httpc get")): 
+            self.method = "GET"
+            self.get_request(urlparse(url))
+        if(cmd.startswith("httpc post")): 
+            self.method = "POST"
+            self.post_request(urlparse(url))
 
     # Format GET Request
     def get_request(self, url):
@@ -118,13 +123,16 @@ class Httpc():
                 # Format URL, for example: https://google.ca/
                 if self.redirect_times < 6:
                     url = url_parsed.scheme + "://" + url_parsed.hostname + response_parsed.location[0]
-                    print("[DEBUG]: GET Redirect To New Location -> ", url)
-                    self.get_request(urlparse(url))
+                    print("[DEBUG]: Redirect To New Location -> ", url)
+                    # GET or POST redirect call
+                    if(self.method == "GET"):
+                        self.get_request(urlparse(url))
+                    else:
+                        self.post_request(urlparse(url))
                     self.redirect_times += 1
                 else:
                     self.redirect_times = 0
                     return self.handle_exception("Redirected 5 times, no more redirect allowed.")                   
-
         except:
             self.handle_exception("The ERROR Exists when connect with SERER SOCKET.")
         finally:
@@ -193,6 +201,7 @@ class Httpc():
         self.passed_headers = ""
         self.file_name = ""
         self.body = ""
+        self.method = ""
         
     # Display Help Information
     def get_help_info(self, arg):
@@ -252,32 +261,3 @@ while True:
         httpc.execute_curl(cmd)
     except KeyboardInterrupt:
         sys.exit()
-
-
-
-# ============ AUTO DEBUG For A2 ============
-# input_cmd = [
-# "httpc get -v 'http://localhost:8080/get?course=networking&assignment=1'",
-# "httpc get -v -h key1:value1 -h key2:value2 'http://localhost:8080/get?course=networking&assignment=1'",
-
-# "httpc get -v -h Accept:application/xml 'http://localhost:8080/'",
-# "httpc get -v -h Accept:application/pdf 'http://localhost:8080/'",
-
-# "httpc get -v -h Accept:text/plain 'http://localhost:8080/bar'",
-# "httpc get -v -h Accept:text/html 'http://localhost:8080/sub/foo'",
-# "httpc get -v -h Accept:application/json 'http://localhost:8080/foo.txt'",
-# "httpc get -v -h Accept:text/html 'http://localhost:8080/sub/../../README.txt'",
-
-# "httpc post -v -h Content-Type:application/json -h Accept:application/json -d '{\"Course\": \"COMP445\",\"Assignment\": 2}' http://localhost:8080/post",
-
-# "httpc post -v -h Content-Type:application/json -d '{\"File Path\": \"data/foo\",\"Course\": \"COMP445\",\"Assignment\": 2}' http://localhost:8080/foo",
-# "httpc post -v -h Content-Type:text/plain -f bar http://localhost:8080/bar",
-
-# "httpc post -v -h Content-Type:application/json -d '{\"File Path\": \"fake/foo\",\"Course\": \"COMP445\",\"Assignment\": 2}' http://localhost:8080/fake/foo",
-# "httpc post -v -h Content-Type:application/json -f bar 'http://localhost:8080/sub/../../README.txt'",
-# "httpc get -v -h Accept:application/json 'http://localhost:8080/foo/download'"
-# ]
-
-# for cmd in input_cmd:
-#     print("\n"+cmd+"\n")
-#     httpc.execute_curl(cmd)

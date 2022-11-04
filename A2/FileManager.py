@@ -1,5 +1,4 @@
 import os, logging, sys, json, re, threading, time
-from urllib import response
 
 class FileManager():
 
@@ -158,7 +157,7 @@ class FileManager():
                 content = file.read()
                 logging.debug(f"POST Body Value from file -> {content}") 
             
-            #self.thread_lock_hold("GET", 5)
+            self.thread_lock_hold("GET", 5)
 
             self.thread_lock.release()
             logging.debug(f"File Manger Thread Lock is Release, with path {self.dir_path}")
@@ -192,7 +191,7 @@ class FileManager():
                 file.write(content)
             file.close()
 
-            #self.thread_lock_hold("POST", 5)
+            self.thread_lock_hold("POST", 5)
 
             self.thread_lock.release()
             logging.debug(f"File Manger Thread Lock is Release, with path {self.dir_path}.\nPOST Body Value into {path} -> {content}")
@@ -230,6 +229,6 @@ class FileManager():
 
     def thread_lock_hold(self, msg, count):
         while count:
-            time.sleep(3)
+            time.sleep(5)
             print(f"\n[DEBUG]: {msg} Thread Lock -- "+"%s -- Countdown: %s" % (time.ctime(time.time()), count))
             count -= 1
