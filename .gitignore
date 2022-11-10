@@ -5,4 +5,5 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 
-
+# router log file
+**/source/router.log
