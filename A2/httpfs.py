@@ -1,5 +1,4 @@
-from distutils.log import log
-import re, sys, json, time, socket, logging, os.path, threading, argparse
+import sys, time, socket, logging, os.path, threading, argparse
 from FileManager import FileManager
 
 BUFF_SIZE = 1024
@@ -32,28 +31,28 @@ class Httpfs():
                 self.verbose, self.port, self.dir_path = args.verbose, args.port, args.dir_path
                 # Display logging debug msg
                 if(self.verbose):
-                    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.DEBUG)
+                    logging.basicConfig(format='%(asctime)s [%(levelname)s]: %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.DEBUG)
                 else:
-                    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.INFO)
+                    logging.basicConfig(format='%(asctime)s [%(levelname)s]: %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.INFO)
 
                 # Validated the file directory 
                 is_exist_path = os.path.dirname(os.path.realpath(__file__)) + "/" + self.dir_path
 
                 if(not os.path.exists(is_exist_path)): 
-                    return logging.info("File Manger Server Directory is not exist.")
+                    return logging.info("File Manger Server -- Directory is not exist.")
 
-                logging.info(f"HTTP File Manager Server Setting: Port - {self.port}, Directory - {self.dir_path}, Verbose - {self.verbose}")
+                logging.info(f"File Manager Server -- Port:{self.port}, Directory: {self.dir_path}, Verbose: {self.verbose}")
 
                 self.run_server()
             except:
-                logging.info("[ERROR]: Invalid Command, with UNKNOWN command.")
+                logging.info("File Manger Server -- ERROR: Invalid Command, with UNKNOWN command.")
         else:
-            logging.info("[ERROR]: Invalid Command, command should start with \"httpfs\"")
+            logging.info("File Manger Server -- ERROR: Invalid Command, command should start with \"httpfs\"")
 
     # Run...
     def run_server(self):
 
-        logging.info('HTTP File Manager Server Socket is running...')
+        logging.info('File Manager Server -- Socket is running...')
 
         listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         listener.bind((self.url, self.port))
@@ -64,9 +63,9 @@ class Httpfs():
                 # Connecting with client socket
                 conn, addr = listener.accept()
                 threading.Thread(target=self.http_handler, args=(conn, addr)).start()
-                logging.info(f'Socket is listening at {self.url}:{self.port}, Thread Number:{threading.activeCount() - 1}')
+                logging.info(f'File Manger Server -- Socket is listening at {self.url}:{self.port}, Thread Number:{threading.activeCount() - 1}')
         finally:
-            logging.info(f'Socket is Disconnecting with {self.url}:{self.port}...')
+            logging.info(f'File Manger Server -- Socket is Disconnecting with {self.url}:{self.port}...')
             listener.close()
 
     # Handle receive HTTP msg
@@ -79,7 +78,7 @@ class Httpfs():
                 data += temp
                 if(len(temp) < BUFF_SIZE): break;
 
-            logging.debug(f'Received HTTP Request -> {data}')
+            logging.debug(f'HTTP File Manger Server -- Received HTTP Request: {data}')
 
             # Process HTTP request
             processed_response = FileManager(self.verbose, self.dir_path, data.decode("utf-8"))
@@ -122,7 +121,7 @@ class Httpfs():
         return dic_type.get(accept_type)
 
 
-print("\n"+"="*10+"Welcome to Httpfs Server"+"="*10)
+print("\n"+"="*10+"Welcome to HTTP File Manger Server"+"="*10)
 # Initial HTTP 
 httpfs = Httpfs()
 # Program Start

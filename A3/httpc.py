@@ -125,7 +125,7 @@ class Httpc():
                 # Format URL, for example: https://google.ca/
                 if self.redirect_times < 6:
                     url = url_parsed.scheme + "://" + url_parsed.hostname + response_parsed.location[0]
-                    logging.info("Redirect To New Location: ", url)
+                    logging.info("HTTP Client -- Redirect To New Location: ", url)
                     # GET or POST redirect call
                     if(self.method == "GET"):
                         self.get_request(urlparse(url))
@@ -147,7 +147,7 @@ class Httpc():
             headers = re.findall(r'-h (\S+:\S+)', cmd)
         else:
             self.handle_exception("The GET headers is Invalid.")
-        logging.info(f"Accept Headers values: {headers}")
+        logging.info(f"HTTP Client -- Accept Headers values: {headers}")
         return "\r\n".join(headers)
 
     # POST body
@@ -156,13 +156,13 @@ class Httpc():
         if ("-d" in cmd):
             # For example: -d '{"Course": "COMP445","Assignment": 1}'
             bodies = re.findall(r'\'(.+?)\'', cmd)[0] if (re.search(r'\'(.+?)\'', cmd))  else self.handle_exception("The POST bodies is Invalid.")
-            logging.info(f"POST Body Value from inline: {bodies}")
+            logging.info(f"HTTP Client -- POST Body Value from inline: {bodies}")
         if ("-f" in cmd):
             # Check whether file exist, then read content
             if (os.path.exists("data/"+self.file_name)):
                 with open("data/"+self.file_name) as file:
                     bodies = file.read().replace('\n', '')
-                    logging.info(f"POST Body Value from file: {bodies}")
+                    logging.info(f"HTTP Client -- POST Body Value from file: {bodies}")
             else:
                 self.handle_exception("The File NOT Exited.")
         return bodies
@@ -170,7 +170,7 @@ class Httpc():
     # Download Response into File
     def download_response(self, response):
 
-        logging.debug(f"Download Response Body into {self.file_name}")
+        logging.debug(f"HTTP Client -- Download Response Body into {self.file_name}")
         # Create new file if not exist, otherwise overwrite
         file = open("data/"+self.file_name, "w") if (os.path.exists("data/"+self.file_name)) else open("data/"+self.file_name, "a")
 
@@ -180,7 +180,7 @@ class Httpc():
 
     def handle_exception(self, msg):
 
-        logging.info(f"\n[ERROR]: {msg}")
+        logging.info(f"\nHTTP Client -- ERROR: {msg}")
         # Handle exception with ask new input commend line
         try:
             cmd = input("\n  Enter commands line begin with \"httpc\". \n  Type help to list commands.\n  Press 'Ctrl+C' or Type 'quit' to terminate.\n\n")
@@ -245,7 +245,7 @@ class HttpResponseParsed():
     self.status = " ".join(self.headers[0].split(" ")[2:])
     self.location = ""
     
-    logging.info(f"Received Response Code: {self.code}, Received Response Statue: {self.status}")
+    logging.info(f"HTTP Client -- Received Response Code: {self.code}, Received Response Statue: {self.status}")
 
     if(self.code in REDIRECT_CODE):
         for header in self.headers:

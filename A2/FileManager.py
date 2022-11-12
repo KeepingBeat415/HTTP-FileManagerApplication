@@ -8,9 +8,9 @@ class FileManager():
 
         # Display logging debug msg
         if(verbose):
-            logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.DEBUG)
+            logging.basicConfig(format='%(asctime)s [%(levelname)s]: %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.DEBUG)
         else:
-            logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.INFO)
+            logging.basicConfig(format='%(asctime)s [%(levelname)s]: %(message)s', datefmt='%Y/%m/%d %H:%M:%S', stream=sys.stdout, level=logging.INFO)
 
         self.dir_path = os.path.dirname(os.path.realpath(__file__)) + "/" + dir_path
         self.status = { "200":"OK", "400":"Bad Request", "401":"Unauthorized", "404":"Not Found"}
@@ -38,7 +38,7 @@ class FileManager():
             accept_type = re.findall(r'Accept:\s*(.+?\S+)', header)[0]
             self.accept_type = self.process_accept_type(accept_type)
 
-        logging.debug(f"method -> {method}, path -> {src_path}, version -> {self.http_version}, accept type -> {self.accept_type}")
+        logging.debug(f"FileManager -- Method: {method}, Path: {src_path}, Version: {self.http_version}, AcceptType: {self.accept_type}")
 
         # Process HTTP request with header
         dic = {}
@@ -72,7 +72,7 @@ class FileManager():
         else:
             self.get_file_content(src_path)
         
-        logging.debug(f"Processed GET response: Code => {self.code}, Body => {self.response_dic}")
+        logging.debug(f"FileManager -- Processed GET response: Code => {self.code}, Body => {self.response_dic}")
     
     # Call File Manager
     def handle_POST_file_request(self, src_path):
@@ -87,7 +87,7 @@ class FileManager():
             if(self.code == "200"):
                 self.response_content = json.dumps(self.response_dic, indent=2, sort_keys=True)
 
-        logging.debug(f"Processed POST response: Code => {self.code}, Body => {self.response_dic}")
+        logging.debug(f"FileManager -- Processed POST response: Code => {self.code}, Body => {self.response_dic}")
     
 
     def get_files_list(self):
@@ -139,28 +139,29 @@ class FileManager():
         # Handle use ".." to access parent directory
         if("../" in dir_path):
             self.code = "401"
-            logging.info(f"Attempt get content from path: {dir_path}, cause 401 - \"Unauthorized\"")
+            logging.info(f"FileManager -- Attempt get content from path: {path}, cause 401 - \"Unauthorized\"")
             self.html_exception_handler(self.code, self.status.get("401"), "Attempt access unauthorized file.")
         # Handle file not exists
         elif(not os.path.exists(dir_path)):
             self.code = "404"
-            logging.info(f"Attempt get content from path: {dir_path}, cause 404 - \"Not Found\"")
+            logging.info(f"FileManager -- Attempt get content from path: {path}, cause 404 - \"Not Found\"")
             self.html_exception_handler(self.code, self.status.get("404"), "Access file not exist.")
         else:
             self.code = "200"
-            logging.info(f"Attempt get content from path: {dir_path}, cause 200 - \"OK\"")
             
             self.thread_lock.acquire()
-            logging.debug(f"File Manger Thread Lock is Active, with path {self.dir_path}")
+            logging.debug(f"FileManager -- GET Thread Lock is Active, with path: {path}")
 
             with open(dir_path) as file:
                 content = file.read()
-                logging.debug(f"POST Body Value from file -> {content}") 
+                logging.debug(f"FileManager -- POST Body Value from File -> {content}") 
             
             self.thread_lock_hold("GET", 5)
 
             self.thread_lock.release()
-            logging.debug(f"File Manger Thread Lock is Release, with path {self.dir_path}")
+            logging.debug(f"FileManager -- GET Thread Lock is Release, with path: {path}")
+
+            logging.info(f"FileManager -- Attempt get content from path: {path}, cause 200 - \"OK\"")
 
             self.generate_file_by_type(self.accept_type, content)
 
@@ -172,20 +173,19 @@ class FileManager():
         # Handle use ".." to access parent directory
         if("../" in dir_path):
             self.code = "401"
-            logging.info(f"Attempt post content to path: {dir_path}, cause 401 - \"Unauthorized\"")
+            logging.info(f"FileManager -- Attempt post content to path: {path}, cause 401 - \"Unauthorized\"")
             self.html_exception_handler(self.code, self.status.get("401"), "Attempt access unauthorized file.")
 
         # Handle file not exists
         elif(not os.path.exists(dir_path)):
             self.code = "404"
-            logging.info(f"Attempt post content to path: {dir_path}, cause 404 - \"Not Found\"")
+            logging.info(f"FileManager -- Attempt post content to path: {path}, cause 404 - \"Not Found\"")
             self.html_exception_handler(self.code, self.status.get("404"), "Access file not exist.")
         else:
             self.code = "200"
-            logging.info(f"Attempt post content to path: {dir_path}, cause 200 - \"OK\"")
 
             self.thread_lock.acquire()
-            logging.debug(f"File Manger Thread Lock is Active, with path {self.dir_path}")
+            logging.debug(f"FileManager -- POST Thread Lock is Active, with path {path}")
 
             with open(dir_path, "w") as file:
                 file.write(content)
@@ -194,10 +194,12 @@ class FileManager():
             self.thread_lock_hold("POST", 5)
 
             self.thread_lock.release()
-            logging.debug(f"File Manger Thread Lock is Release, with path {self.dir_path}.\nPOST Body Value into {path} -> {content}")
+            logging.debug(f"FileManager -- POST Thread Lock is Release, with path {path}. POST content: {content}")
+
+            logging.info(f"FileManager -- Attempt post content to path: {path}, cause 200 - \"OK\"")
 
     def html_exception_handler(self, code, status, msg):
-        logging.debug(f"File manager exception handler: code => {code}, status => {status}, msg => {msg}")
+        logging.debug(f"FileManager -- Exception handler: Code => {code}, Status => {status}, Msg => {msg}")
 
         self.response_content =  (
                         "<html>\n"+

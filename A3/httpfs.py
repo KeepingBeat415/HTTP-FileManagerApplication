@@ -38,20 +38,20 @@ class Httpfs():
                 is_exist_path = os.path.dirname(os.path.realpath(__file__)) + "/" + self.dir_path
 
                 if(not os.path.exists(is_exist_path)): 
-                    return logging.info("File Manger Server Directory is not exist.")
+                    return logging.info("File Manger Server -- Directory is not exist.")
 
-                logging.info(f"HTTP File Manager Server Setting: Port - {self.port}, Directory - {self.dir_path}, Verbose - {self.verbose}")
+                logging.info(f"File Manager Server -- Port:{self.port}, Directory: {self.dir_path}, Verbose: {self.verbose}")
 
                 self.run_server()
             except:
-                logging.info("[ERROR]: Invalid Command, with UNKNOWN command.")
+                logging.info("File Manger Server -- ERROR: Invalid Command, with UNKNOWN command.")
         else:
-            logging.info("[ERROR]: Invalid Command, command should start with \"httpfs\"")
+            logging.info("File Manger Server -- ERROR: Invalid Command, command should start with \"httpfs\"")
 
     # Run...
     def run_server(self):
 
-        logging.info(f"HTTP File Manager Server is listening at {SERVER_IP}:{SERVER_PORT}.")
+        logging.info(f"File Manager Server -- listening at {SERVER_IP}:{SERVER_PORT}.")
 
         # listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_udp_socket = udpService()
@@ -71,7 +71,7 @@ class Httpfs():
                 # logging.debug(f'Received HTTP Request -> {data}')
                 # logging.info(f'Socket is listening at {self.url}:{self.port}, Thread Number: {threading.activeCount() - 1}')
         finally:
-            logging.info(f'Socket is Disconnecting with {self.url}:{self.port}...')
+            logging.info(f'File Manger Server -- Socket is Disconnecting with {self.url}:{self.port}...')
             server_udp_socket.close()
 
     # Handle receive HTTP msg
@@ -92,7 +92,7 @@ class Httpfs():
             #conn.send(response_content.encode('utf-8'))
             server_udp_socket.send_data(response_content.encode("utf-8"))
         finally:
-            logging.info("Client HTTP File Manager Server Request Processed.")
+            logging.info("File Manger Server -- Current Request Processed.")
 
 
     def generate_response_content(self, response):
@@ -127,7 +127,7 @@ class Httpfs():
         return dic_type.get(accept_type)
 
 
-print("\n"+"="*10+"Welcome to Httpfs Server"+"="*10)
+print("\n"+"="*10+"Welcome to HTTP File Manger Server"+"="*10)
 # Initial HTTP 
 httpfs = Httpfs()
 # Program Start
