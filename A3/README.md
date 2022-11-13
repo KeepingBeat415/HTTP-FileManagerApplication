@@ -1,6 +1,6 @@
 ## Run Router for simulate UDP protocol packet delayed and drop
 
-- Default router address: localhost:8080
+- Default router IP: localhost, PORT: 3000
 - Max delay: 3000ms (limit by UDP waiting timeout)
 
 ### Router Setting
@@ -18,4 +18,4 @@
 
 ### HTTP POST
 
-- httpc post -v -h Content-Type:application/json -d '{"File Path": "data/foo","Course": "COMP445","Assignment": 3}' http://localhost:8080/foo (Good Case, inline parameter post)
+- httpc post -v -h Content-Type:application/json -d '{"File Path": "data/foo","Course": "COMP445","Assignment": 3}' http://localhost:8080/foo (inline parameter POST)
