@@ -26,8 +26,9 @@ class udpService():
 
             logging.info(f"Client Attempt Connecting To Server -- {SERVER_IP}:{SERVER_PORT}")
             # Prepare SYN Packet, and send to Server
-            send_syn_pkt = self.packet_builder.build(PACKET_TYPE_SYN)
-            self.conn.sendto(send_syn_pkt.to_bytes(), self.router_addr)
+            self.send_packet(PACKET_TYPE_SYN)
+            # send_syn_pkt = self.packet_builder.build(PACKET_TYPE_SYN)
+            # self.conn.sendto(send_syn_pkt.to_bytes(), self.router_addr)
 
             logging.debug("Client send SYN, and wait for SYN-ACK response from Server.")
             # Server response msg
@@ -38,9 +39,10 @@ class udpService():
             
             elif recv_pkt.packet_type == PACKET_TYPE_SYN_ACK:
 
-                # Send ACK, then establish connection 
-                send_ack_pkt = self.packet_builder.build(PACKET_TYPE_ACK)
-                self.conn.sendto(send_ack_pkt.to_bytes(), self.router_addr)
+                # Send ACK, then establish connection
+                self.send_packet(PACKET_TYPE_ACK)
+                # send_ack_pkt = self.packet_builder.build(PACKET_TYPE_ACK)
+                # self.conn.sendto(send_ack_pkt.to_bytes(), self.router_addr)
 
                 logging.info("Client To Server Connection Established.")
                 break
@@ -65,8 +67,9 @@ class udpService():
 
                     while True:
                         # Send SYN-ACK to Client
-                        send_pkt = self.packet_builder.build(PACKET_TYPE_SYN_ACK)
-                        self.conn.sendto(send_pkt.to_bytes(), self.router_addr)
+                        self.send_packet(PACKET_TYPE_SYN_ACK)
+                        # send_pkt = self.packet_builder.build(PACKET_TYPE_SYN_ACK)
+                        # self.conn.sendto(send_pkt.to_bytes(), self.router_addr)
                         # Client's response
                         recv_pkt = self.get_packet(TIME_OUT, "Server Connection")
 
@@ -80,10 +83,11 @@ class udpService():
                 # In case, some delay FIN_ACK from current Client
                 elif recv_pkt.packet_type == PACKET_TYPE_FIN_ACK:
                     
-                    self.packet_builder = PacketBuilder(recv_pkt.peer_ip_addr, recv_pkt.peer_port)
-                    ack_pkt = self.packet_builder.build(PACKET_TYPE_ACK)
+                    #self.packet_builder = PacketBuilder(recv_pkt.peer_ip_addr, recv_pkt.peer_port)
+                    self.send_packet(PACKET_TYPE_ACK)
+                    # ack_pkt = self.packet_builder.build(PACKET_TYPE_ACK)
 
-                    self.conn.sendto(ack_pkt.to_bytes(), self.router_addr)
+                    # self.conn.sendto(ack_pkt.to_bytes(), self.router_addr)
                     logging.debug("Server To Connection -- Type: FIN-ACK, Recovery with Packet Lost and sent back ACK.")
                 else:
                     logging.debug("Server Fail To Connection -- Expect for receive SYN Packet.")
@@ -99,17 +103,19 @@ class udpService():
 
             for frame in window.get_process_frames():
                 # Prepare data packet
-                pkt = self.packet_builder.build(PACKET_TYPE_DATA, frame.seq_num, frame.payload)
-                self.conn.sendto(pkt.to_bytes(), self.router_addr)
+                self.send_packet(PACKET_TYPE_DATA, frame.seq_num, frame.payload)
+                # pkt = self.packet_builder.build(PACKET_TYPE_DATA, frame.seq_num, frame.payload)
+                # self.conn.sendto(pkt.to_bytes(), self.router_addr)
 
-                logging.debug(f"Send Data Packet -- Type: DATA, Num: {pkt.seq_num}, payload: {pkt.payload}")
+                logging.debug(f"Send Data Packet -- Type: DATA, Num: {frame.seq_num}, payload: {frame.payload}")
                 frame.send = True
 
         # 3-way handshake say Good-bye
         while True:
             # Send FIN msg
-            send_fin_pkt = self.packet_builder.build(PACKET_TYPE_FIN)
-            self.conn.sendto(send_fin_pkt.to_bytes(), self.router_addr)
+            self.send_packet(PACKET_TYPE_FIN)
+            # send_fin_pkt = self.packet_builder.build(PACKET_TYPE_FIN)
+            # self.conn.sendto(send_fin_pkt.to_bytes(), self.router_addr)
 
             logging.debug(f"Send Data Packet -- Type: FIN, and Wait for FIN-ACK.")
             # Received response msg
@@ -120,8 +126,9 @@ class udpService():
                 continue
             if recv_pkt.packet_type == PACKET_TYPE_FIN_ACK:
                 # Send ACK msg
-                send_ack_pkt = self.packet_builder.build(PACKET_TYPE_ACK)
-                self.conn.sendto(send_ack_pkt.to_bytes(), self.router_addr)
+                self.send_packet(PACKET_TYPE_ACK)
+                # send_ack_pkt = self.packet_builder.build(PACKET_TYPE_ACK)
+                # self.conn.sendto(send_ack_pkt.to_bytes(), self.router_addr)
                 logging.debug("Send Data Packet -- Type: FIN-ACK, and Finished.")
                 break
 
@@ -142,9 +149,10 @@ class udpService():
                 if pkt.packet_type == PACKET_TYPE_FIN_ACK:
                     # Send back ACK
                     self.packet_builder = PacketBuilder(pkt.peer_ip_addr, pkt.peer_port)
-                    ack_pkt = self.packet_builder.build(PACKET_TYPE_ACK)
+                    self.send_packet(PACKET_TYPE_ACK)
+                    # ack_pkt = self.packet_builder.build(PACKET_TYPE_ACK)
 
-                    self.conn.sendto(ack_pkt.to_bytes(), self.router_addr)
+                    # self.conn.sendto(ack_pkt.to_bytes(), self.router_addr)
                     logging.debug("Received ACK Packet -- Type: FIN-ACK, Recovery With Packet Lost and sent back ACK.")
                 # Packets ACK
                 if pkt.packet_type == PACKET_TYPE_ACK:
@@ -169,17 +177,19 @@ class udpService():
                 window.process_packet(pkt)
                 # send ACK
                 self.packet_builder = PacketBuilder(pkt.peer_ip_addr, pkt.peer_port)
-                ack_pkt = self.packet_builder.build(PACKET_TYPE_ACK, pkt.seq_num, "")
+                self.send_packet(PACKET_TYPE_ACK, pkt.seq_num, "")
+                # ack_pkt = self.packet_builder.build(PACKET_TYPE_ACK, pkt.seq_num, "")
 
-                self.conn.sendto(ack_pkt.to_bytes(), self.router_addr)
+                # self.conn.sendto(ack_pkt.to_bytes(), self.router_addr)
 
             # In case some delay or drop FIN_ACK packets
             elif pkt.packet_type == PACKET_TYPE_FIN_ACK:
                 # Send FIN-ACK msg 
                 self.packet_builder = PacketBuilder(pkt.peer_ip_addr, pkt.peer_port)
+                self.send_packet(PACKET_TYPE_ACK)
 
-                ack_pkt = self.packet_builder.build(PACKET_TYPE_ACK)
-                self.conn.sendto(ack_pkt.to_bytes(), self.router_addr)
+                # ack_pkt = self.packet_builder.build(PACKET_TYPE_ACK)
+                # self.conn.sendto(ack_pkt.to_bytes(), self.router_addr)
                 logging.debug("Received Data Packet -- Type: FIN-ACK, Recovery with Packet Lost and sent back ACK.")
             # 3-way handshake say Good-bye
             elif pkt.packet_type == PACKET_TYPE_FIN:
@@ -187,9 +197,10 @@ class udpService():
                 while True:
                     # Send FIN-ACK msg 
                     self.packet_builder = PacketBuilder(pkt.peer_ip_addr, pkt.peer_port)
+                    self.send_packet(PACKET_TYPE_FIN_ACK)
 
-                    ack_pkt = self.packet_builder.build(PACKET_TYPE_FIN_ACK)
-                    self.conn.sendto(ack_pkt.to_bytes(), self.router_addr)
+                    # ack_pkt = self.packet_builder.build(PACKET_TYPE_FIN_ACK)
+                    # self.conn.sendto(ack_pkt.to_bytes(), self.router_addr)
                     logging.debug("Received Data Packet -- Type: FIN, and sent back FIN-ACK.")
                     # Get response msg
                     recv_pkt = self.get_packet(TIME_TO_BEY, "Received Data")
@@ -221,6 +232,17 @@ class udpService():
         except socket.timeout:
             return None
 
+    #Help method for Sending 
+    def send_packet(self, packet_type, seq_num=0, payload=""): #(self, packet_type, seq_num, peer_ip_addr, peer_port, payload)
+
+        pkt = self.packet_builder.build(packet_type, seq_num, payload)
+        self.conn.sendto(pkt.to_bytes(), self.router_addr)
+
+    # def send_packet(self, packet_type, peer_ip, peer_port, seq_num=0, payload=""): #(self, packet_type, seq_num, peer_ip_addr, peer_port, payload)
+
+    #     pkt = Packet(packet_type, seq_num, peer_ip, peer_port, payload)
+    #     self.conn.sendto(pkt.to_bytes(), self.router_addr)
+    
     # Convert data into String type
     def process_data(self, window):
         window.display_frames_content()

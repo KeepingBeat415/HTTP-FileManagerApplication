@@ -1,4 +1,4 @@
-import re, sys, socket, os.path, time, logging
+import re, sys, os.path, time, logging
 from urllib.parse import urlparse
 from const import *
 from udpService import udpService
