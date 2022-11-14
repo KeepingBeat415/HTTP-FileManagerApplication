@@ -1,4 +1,4 @@
-import re, sys, os.path, time, logging
+import re, sys, os.path, time, logging, socket, ipaddress
 from urllib.parse import urlparse
 from const import *
 from udpService import udpService
@@ -105,10 +105,12 @@ class Httpc():
 
         # Initialize Client Socket
         client_udp_socket = udpService()
+        # Convert localhost to 127.0.0.1
+        peer_ip_addr = ipaddress.ip_address(socket.gethostbyname(url_parsed.hostname))
 
         try:
             # Connect UDP Socket
-            client_udp_socket.connect_server()
+            client_udp_socket.connect_server(peer_ip_addr, SERVER_PORT)
             # Sent HTTP Request
             client_udp_socket.send_data(request.encode("utf-8"))
             # Store HTTP Response

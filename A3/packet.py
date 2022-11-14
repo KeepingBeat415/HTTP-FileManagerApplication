@@ -65,11 +65,3 @@ class Packet:
                       peer_ip_addr=peer_addr,
                       peer_port=peer_port,
                       payload=payload)
-
-class PacketBuilder:
-    def __init__(self, peer_addr, peer_port):
-        self.peer_addr = peer_addr
-        self.peer_port = peer_port
-    
-    def build(self, packet_type, seq_num=0, payload=""):
-        return Packet(packet_type, seq_num, self.peer_addr, self.peer_port, payload)
