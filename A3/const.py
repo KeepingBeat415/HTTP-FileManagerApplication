@@ -6,7 +6,7 @@ MIN_LEN = 11
 MAX_LEN = 1024
 
 # PAYLOAD_SIZE = 1013
-PAYLOAD_SIZE = 20 # For debug frames function
+PAYLOAD_SIZE = 40 # For debug frames function
 PACKET_SIZE = 1024
 
 PACKET_TYPE_NONE = 0

@@ -53,23 +53,14 @@ class Httpfs():
 
         logging.info(f"File Manager Server -- listening at {SERVER_IP}:{SERVER_PORT}.")
 
-        # listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_udp_socket = udpService()
         server_udp_socket.conn.bind(('', SERVER_PORT))
-        # listener.bind((self.url, self.port))
 
         try:
-
             while True:
-
                 server_udp_socket.connect_client()
-
-                #threading.Thread(target=self.http_handler, args=(server_udp_socket,)).start()
                 self.http_handler(server_udp_socket)
-                # data = server_udp_socket.received_data()
 
-                # logging.debug(f'Received HTTP Request -> {data}')
-                # logging.info(f'Socket is listening at {self.url}:{self.port}, Thread Number: {threading.activeCount() - 1}')
         finally:
             logging.info(f'File Manger Server -- Socket is Disconnecting with {self.url}:{self.port}...')
             server_udp_socket.close()
@@ -80,7 +71,6 @@ class Httpfs():
         try:
 
             data = server_udp_socket.received_data()
-
             # logging.debug(f'Received HTTP Request -> {data}')
 
             # Process HTTP request
@@ -149,7 +139,6 @@ httpfs = Httpfs()
 input_cmd_A3 = [
 "httpfs -v",
 ]
-
 
 for cmd in input_cmd_A3:
     print("\ncmd -> "+cmd+"\n")

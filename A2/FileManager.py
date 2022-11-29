@@ -156,7 +156,7 @@ class FileManager():
                 content = file.read()
                 logging.debug(f"FileManager -- POST Body Value from File -> {content}") 
             
-            self.thread_lock_hold("GET", 5)
+            self.thread_lock_hold("GET", 3)
 
             self.thread_lock.release()
             logging.debug(f"FileManager -- GET Thread Lock is Release, with path: {path}")
@@ -191,7 +191,7 @@ class FileManager():
                 file.write(content)
             file.close()
 
-            self.thread_lock_hold("POST", 5)
+            self.thread_lock_hold("POST", 3)
 
             self.thread_lock.release()
             logging.debug(f"FileManager -- POST Thread Lock is Release, with path {path}. POST content: {content}")
@@ -231,6 +231,6 @@ class FileManager():
 
     def thread_lock_hold(self, msg, count):
         while count:
-            time.sleep(5)
+            time.sleep(3)
             print(f"\n[DEBUG]: {msg} Thread Lock -- "+"%s -- Countdown: %s" % (time.ctime(time.time()), count))
             count -= 1

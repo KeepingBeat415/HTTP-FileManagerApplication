@@ -110,7 +110,7 @@ class Httpc():
 
         try:
             # Connect UDP Socket
-            client_udp_socket.connect_server(peer_ip_addr, SERVER_PORT)
+            client_udp_socket.connect_server(peer_ip_addr, url_parsed.port)
             # Sent HTTP Request
             client_udp_socket.send_data(request.encode("utf-8"))
             # Store HTTP Response
@@ -269,15 +269,15 @@ httpc = Httpc()
 
 # ============ AUTO DEBUG For A3 ============
 input_cmd_A3 = [
-"httpc get -v 'http://localhost:8080/'",
-# "httpc get -v -h Accept:text/plain 'http://localhost:8080/foo'",
-"httpc post -v -h Content-Type:application/json -d '{\"File Path\": \"data/foo\",\"Course\": \"COMP445\",\"Assignment\": 3}' http://localhost:8080/foo",
-# "httpc post -v -h Content-Type:text/plain -f foo http://localhost:8080/foo",
+"httpc get -v 'http://localhost:8007/'",
+# "httpc get -v -h Accept:text/plain 'http://localhost:8007/foo'",
+"httpc post -v -h Content-Type:application/json -d '{\"File Path\": \"data/foo\",\"Course\": \"COMP445\",\"Assignment\": 3}' http://localhost:8007/foo",
+# "httpc post -v -h Content-Type:text/plain -f foo http://localhost:8007/foo",
 ]
 
 for cmd in input_cmd_A3:
     print("\ncmd -> "+cmd+"\n")
     httpc.execute_curl(cmd)
-    time.sleep(5)
+    time.sleep(3)
 
     
