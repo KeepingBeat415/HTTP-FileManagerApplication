@@ -270,14 +270,17 @@ httpc = Httpc()
 # ============ AUTO DEBUG For A3 ============
 input_cmd_A3 = [
 "httpc get -v 'http://localhost:8007/'",
-# "httpc get -v -h Accept:text/plain 'http://localhost:8007/foo'",
+
+"httpc get -v -h Accept:text/plain 'http://localhost:8007/foo'",
+"httpc post -v -h Content-Type:text/plain -f foo http://localhost:8007/foo",
+
 "httpc post -v -h Content-Type:application/json -d '{\"File Path\": \"data/foo\",\"Course\": \"COMP445\",\"Assignment\": 3}' http://localhost:8007/foo",
-# "httpc post -v -h Content-Type:text/plain -f foo http://localhost:8007/foo",
+
+"httpc get -v -h Accept:text/plain 'http://localhost:8007/sample'",
+"httpc post -v -h Content-Type:text/plain -f sample http://localhost:8007/sample",
 ]
 
 for cmd in input_cmd_A3:
     print("\ncmd -> "+cmd+"\n")
     httpc.execute_curl(cmd)
-    time.sleep(3)
-
-    
+    time.sleep(2)

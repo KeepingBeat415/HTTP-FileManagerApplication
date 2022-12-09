@@ -6,7 +6,7 @@ MIN_LEN = 11
 MAX_LEN = 1024
 
 # PAYLOAD_SIZE = 1013
-PAYLOAD_SIZE = 40 # For debug frames function
+PAYLOAD_SIZE = 50 # For debug frames function
 PACKET_SIZE = 1024
 
 PACKET_TYPE_NONE = 0
@@ -19,6 +19,7 @@ PACKET_TYPE_FIN_ACK = 6
 
 SERVER_IP = "localhost"
 SERVER_PORT = 8007
+SERVER_PORT_NUM = 2
 ROUTER_IP = "localhost"
 ROUTER_PORT = 3000
 WINDOW_SIZE = 3
