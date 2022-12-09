@@ -1,4 +1,4 @@
-import sys, time, logging, os.path, argparse
+import sys, time, logging, os.path, argparse, threading
 from FileManager import FileManager
 from udpService import udpService
 from const import *
@@ -8,6 +8,8 @@ class Httpfs():
     def __init__(self):
         self.url = SERVER_IP
         self.port = SERVER_PORT
+        self.socket_list = {}
+        self.lock = {}
         self.dir_path = "data"
         self.verbose = False
         self.status = { "200":"OK", "400":"Bad Request", "401":"Unauthorized", "404":"Not Found", "505":"HTTP Version Not Supported"}
@@ -41,32 +43,64 @@ class Httpfs():
                     return logging.info("File Manger Server -- Directory is not exist.")
 
                 logging.info(f"File Manager Server -- Port:{self.port}, Directory: {self.dir_path}, Verbose: {self.verbose}")
-
-                self.run_server()
+                
+                # General Service
+                # self.run_server()
+                
+                # Handle Multi-client
+                self.run_server_multi_client()
             except:
                 logging.info("File Manger Server -- ERROR: Invalid Command, with UNKNOWN command.")
         else:
             logging.info("File Manger Server -- ERROR: Invalid Command, command should start with \"httpfs\"")
 
-    # Run...
+    # Run... handler general service
     def run_server(self):
 
-        logging.info(f"File Manager Server -- listening at {SERVER_IP}:{SERVER_PORT}.")
+        logging.info(f"File Manager Server -- listening at {self.url}:{self.port}.")
 
         server_udp_socket = udpService()
-        server_udp_socket.conn.bind(('', SERVER_PORT))
+        server_udp_socket.conn.bind(('', self.port))
 
         try:
             while True:
-                server_udp_socket.connect_client()
-                self.http_handler(server_udp_socket)
+                if(server_udp_socket.connect_client()): self.http_handler(server_udp_socket)
 
         finally:
             logging.info(f'File Manger Server -- Socket is Disconnecting with {self.url}:{self.port}...')
             server_udp_socket.close()
 
+    # Run... handler multi-client
+    def run_server_multi_client(self):
+
+        try:
+            # Initial PORT lock and upd socket
+            for i in range(0, SERVER_PORT_NUM):
+                server_udp_socket = udpService()
+                server_udp_socket.conn.bind(('', self.port + i))
+                self.socket_list[i] = server_udp_socket
+                self.lock[i] = False
+
+            while True:
+
+                for i in range(0, SERVER_PORT_NUM):
+                    # If current port locked, then continue
+                    if(self.lock.get(i)): 
+                        continue
+                    if(not self.lock.get(i)):
+                        logging.info(f"File Manager Server -- listening at {self.url}:{self.port + i}.")
+                    # Get current available socket
+                    server_udp_socket = self.socket_list.get(i)
+                    if(server_udp_socket.connect_client()):
+                        # Locked the used socket
+                        self.lock[i] = True
+                        threading.Thread(target=self.http_handler, args=(server_udp_socket, i,)).start() 
+        finally:
+            logging.info(f'File Manger Server -- Socket is Disconnecting....')
+
+
     # Handle receive HTTP msg
-    def http_handler(self, server_udp_socket):
+    def http_handler(self, server_udp_socket, num=0):
 
         try:
 
@@ -82,6 +116,8 @@ class Httpfs():
             #conn.send(response_content.encode('utf-8'))
             server_udp_socket.send_data(response_content.encode("utf-8"))
         finally:
+            # Unlock the socket
+            self.lock[num] = False
             logging.info("File Manger Server -- Current Request Processed.")
 
 

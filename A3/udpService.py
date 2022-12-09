@@ -23,7 +23,7 @@ class udpService():
  
         while True:
 
-            logging.info(f"Client Attempt Connecting To Server -- {SERVER_IP}:{SERVER_PORT}")
+            logging.info(f"Client Attempt Connecting To Server -- {self.peer_ip}:{self.peer_port}")
             # Prepare SYN Packet, and send to Server
             self.send_packet(PACKET_TYPE_SYN, self.peer_ip, self.peer_port)
 
@@ -53,6 +53,7 @@ class udpService():
 
             if recv_pkt is None:
                 logging.info("HTTP File Manager Server Wait For Connection...")
+                return False
             else:
                 # Create packet builder depends on Client's addr
                 self.peer_ip, self.peer_port = recv_pkt.peer_ip_addr, recv_pkt.peer_port
@@ -70,10 +71,9 @@ class udpService():
                         # In case, response ACK msg lost
                         if recv_pkt is not None and (recv_pkt.packet_type == PACKET_TYPE_ACK or recv_pkt.packet_type == PACKET_TYPE_DATA):
                             logging.info("Server To Client Connection Established.")
-                            break
+                            return True
                         else:
                             logging.debug("Server Fail To Connection -- Expect for receive ACK Packet.")
-                    break
                 # In case, some delay FIN_ACK from current Client
                 elif recv_pkt.packet_type == PACKET_TYPE_FIN_ACK:
                     
